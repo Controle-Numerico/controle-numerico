@@ -56,6 +56,12 @@
       min-height: 120px;
     }
 
+    textarea[readonly], textarea:disabled {
+      background: #f4f7fa;
+      color: #45576a;
+      cursor: not-allowed;
+    }
+
     button {
       font-weight: bold;
       border: none;
@@ -314,7 +320,7 @@
   <div class="container">
     <h1>📋 Controle Numérico</h1>
     <div class="subtitle">
-      Controle anual sequencial 2026 • sem repetição • com observação e data automática
+      Controle anual sequencial 2026 • sem repetição • observação bloqueada após salvar
     </div>
 
     <div class="top">
@@ -346,14 +352,14 @@
   <div class="modal-overlay" id="modalOverlay">
     <div class="modal">
       <h2 id="modalTitulo">Observação do número</h2>
-      <p>Registre onde esse número foi utilizado.</p>
+      <p id="modalTextoApoio">Registre onde esse número foi utilizado.</p>
 
       <div class="mini-info" id="modalInfo"></div>
 
       <textarea id="observacaoTexto" placeholder="Ex.: Usado em email para setor financeiro, protocolo interno, cartório, destinatário, assunto..."></textarea>
 
       <div class="modal-actions">
-        <button class="btn-primary" onclick="salvarObservacao()">Salvar observação</button>
+        <button class="btn-primary" id="btnSalvarObservacao" onclick="salvarObservacao()">Salvar observação</button>
         <button class="btn-gray" onclick="fecharModal()">Fechar</button>
       </div>
     </div>
@@ -365,59 +371,75 @@
     const URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
     const TIPOS = {
-      mensagensExpressas: {
-        nome: "Mensagens Expressas",
-        prefixo: "Mensagem Expressa",
-        max: 220,
-        digits: 3
-      },
       guiaCautelas: {
         nome: "Guia de Cautelas",
         prefixo: "Guia de Cautelas",
-        max: 40,
-        digits: 2
-      },
-      notaBI: {
-        nome: "Nota para BI",
-        prefixo: "Nota para BI",
-        max: 220,
-        digits: 2
-      },
-      oficiosExpedidos: {
-        nome: "Ofícios Expedidos",
-        prefixo: "Ofício Expedido",
-        max: 120,
-        digits: 3
-      },
-      relatorioVulto: {
-        nome: "Relatório / Comunicação de Ocorrência de Vulto",
-        prefixo: "Relatório de Vulto",
-        max: 40,
+        min: 6,
+        max: 100,
         digits: 2
       },
       guiasMalote: {
         nome: "Guias de Malote",
         prefixo: "Guia de Malote",
-        max: 40,
+        min: 1,
+        max: 200,
         digits: 2
       },
-      partes: {
-        nome: "Partes",
-        prefixo: "Parte",
-        max: 100,
-        digits: 2
+      mensagensExpressas: {
+        nome: "Mensagens Expressas",
+        prefixo: "Mensagem Expressa",
+        min: 202,
+        max: 1000,
+        digits: 3
+      },
+      notaBI: {
+        nome: "Nota para BI",
+        prefixo: "Nota para BI",
+        min: 14,
+        max: 500,
+        digits: 3
       },
       numeroProcessoFunrebom: {
         nome: "Número Processo Funrebom",
         prefixo: "Processo Funrebom",
+        min: 1,
         max: 100,
+        digits: 2
+      },
+      oficiosExpedidos: {
+        nome: "Ofícios Expedidos",
+        prefixo: "Ofício Expedido",
+        min: 4,
+        max: 500,
         digits: 3
       },
       ordensServico: {
         nome: "Ordens de Serviço",
         prefixo: "Ordem de Serviço",
-        max: 40,
-        digits: 2
+        min: 2,
+        max: 500,
+        digits: 3
+      },
+      partes: {
+        nome: "Partes",
+        prefixo: "Parte",
+        min: 8,
+        max: 500,
+        digits: 3
+      },
+      relatorioVulto: {
+        nome: "Relatório / Comunicação de Ocorrência de Vulto",
+        prefixo: "Relatório de Vulto",
+        min: 1,
+        max: 200,
+        digits: 3
+      },
+      sodc4pelbm: {
+        nome: "SODC 4PelBM",
+        prefixo: "SODC 4PelBM",
+        min: 3,
+        max: 500,
+        digits: 3
       }
     };
 
@@ -427,7 +449,8 @@
 
     let modalAtual = {
       tipo: null,
-      numero: null
+      numero: null,
+      modo: "novo"
     };
 
     const tipoEl = document.getElementById("tipo");
@@ -440,8 +463,10 @@
 
     const modalOverlay = document.getElementById("modalOverlay");
     const modalTitulo = document.getElementById("modalTitulo");
+    const modalTextoApoio = document.getElementById("modalTextoApoio");
     const modalInfo = document.getElementById("modalInfo");
     const observacaoTexto = document.getElementById("observacaoTexto");
+    const btnSalvarObservacao = document.getElementById("btnSalvarObservacao");
 
     function pad(num, digits) {
       return String(num).padStart(digits, "0");
@@ -485,12 +510,14 @@
 
     function initSelects() {
       tipoEl.innerHTML = "";
-      Object.entries(TIPOS).forEach(([key, item]) => {
-        const option = document.createElement("option");
-        option.value = key;
-        option.textContent = item.nome;
-        tipoEl.appendChild(option);
-      });
+      Object.entries(TIPOS)
+        .sort((a, b) => a[1].nome.localeCompare(b[1].nome, "pt-BR"))
+        .forEach(([key, item]) => {
+          const option = document.createElement("option");
+          option.value = key;
+          option.textContent = item.nome;
+          tipoEl.appendChild(option);
+        });
     }
 
     function getUsadosDoTipo(tipo) {
@@ -512,7 +539,7 @@
 
     function getProximoDisponivel(tipo) {
       const config = TIPOS[tipo];
-      for (let i = 1; i <= config.max; i++) {
+      for (let i = config.min; i <= config.max; i++) {
         if (!numeroJaUsado(tipo, i)) return i;
       }
       return null;
@@ -525,6 +552,7 @@
 
     function registrarNumero(tipo, numero, observacao = "") {
       ensureStructure();
+      const config = TIPOS[tipo];
 
       if (numeroJaUsado(tipo, numero)) {
         return {
@@ -533,17 +561,25 @@
         };
       }
 
+      if (numero < config.min || numero > config.max) {
+        return {
+          ok: false,
+          msg: `Esse documento aceita somente números de ${pad(config.min, config.digits)} até ${pad(config.max, config.digits)}.`
+        };
+      }
+
       const proximo = getProximoDisponivel(tipo);
       if (numero !== proximo) {
         return {
           ok: false,
-          msg: `A sequência é obrigatória. O próximo número disponível é ${pad(proximo, TIPOS[tipo].digits)}.`
+          msg: `A sequência é obrigatória. O próximo número disponível é ${pad(proximo, config.digits)}.`
         };
       }
 
       db.ano2026[tipo].usados[String(numero)] = {
         observacao: observacao || "",
-        criadoEm: new Date().toISOString()
+        criadoEm: new Date().toISOString(),
+        observacaoTravada: true
       };
 
       return { ok: true };
@@ -556,8 +592,16 @@
       const usados = getUsadosDoTipo(tipo);
       const ultimo = getUltimoUsado(tipo);
 
+      numeroManualEl.min = config.min;
+      numeroManualEl.max = config.max;
+      buscarNumeroEl.min = config.min;
+      buscarNumeroEl.max = config.max;
+      numeroManualEl.placeholder = `Digite de ${pad(config.min, config.digits)} até ${pad(config.max, config.digits)}`;
+      buscarNumeroEl.placeholder = `Buscar de ${pad(config.min, config.digits)} até ${pad(config.max, config.digits)}`;
+
       infoEl.innerHTML = `
         <b>Documento:</b> ${config.nome}<br>
+        <b>Faixa disponível:</b> ${pad(config.min, config.digits)} até ${pad(config.max, config.digits)}<br>
         <b>Próximo número obrigatório:</b> ${proximo ? pad(proximo, config.digits) : "Fim"}<br>
         <b>Último usado em 2026:</b> ${ultimo ? pad(ultimo, config.digits) : "---"}<br>
         <b>Total usados em 2026:</b> ${usados.length}
@@ -585,7 +629,7 @@
 
       gridEl.innerHTML = "";
 
-      for (let i = 1; i <= config.max; i++) {
+      for (let i = config.min; i <= config.max; i++) {
         const registro = getRegistro(tipo, i);
         const div = document.createElement("div");
         div.className = "num";
@@ -653,6 +697,7 @@
 
     function marcarNumeroManual() {
       const tipo = tipoEl.value;
+      const config = TIPOS[tipo];
       const numero = Number(numeroManualEl.value);
 
       if (!numero) {
@@ -660,13 +705,18 @@
         return;
       }
 
-      const proximo = getProximoDisponivel(tipo);
-      if (numero !== proximo) {
-        alert(`A sequência é obrigatória. O próximo número é ${pad(proximo, TIPOS[tipo].digits)}.`);
+      if (numero < config.min || numero > config.max) {
+        alert(`Digite um número entre ${pad(config.min, config.digits)} e ${pad(config.max, config.digits)}.`);
         return;
       }
 
-      modalAtual = { tipo, numero };
+      const proximo = getProximoDisponivel(tipo);
+      if (numero !== proximo) {
+        alert(`A sequência é obrigatória. O próximo número é ${pad(proximo, config.digits)}.`);
+        return;
+      }
+
+      modalAtual = { tipo, numero, modo: "novo" };
       abrirModalNovoNumero(tipo, numero);
     }
 
@@ -683,19 +733,24 @@
         return;
       }
 
-      modalAtual = { tipo, numero };
+      modalAtual = { tipo, numero, modo: "novo" };
       abrirModalNovoNumero(tipo, numero);
     }
 
     function abrirModalNovoNumero(tipo, numero) {
       const config = TIPOS[tipo];
       modalTitulo.textContent = `Registrar ${config.prefixo} ${pad(numero, config.digits)}`;
+      modalTextoApoio.textContent = "Registre onde esse número foi utilizado. Após salvar, a observação ficará bloqueada.";
       modalInfo.innerHTML = `
         <b>Documento:</b> ${config.nome}<br>
         <b>Número:</b> ${pad(numero, config.digits)}<br>
         <b>Data do registro:</b> ${formatarDataBR(new Date().toISOString())}
       `;
       observacaoTexto.value = "";
+      observacaoTexto.disabled = false;
+      observacaoTexto.readOnly = false;
+      btnSalvarObservacao.style.display = "block";
+      btnSalvarObservacao.textContent = "Salvar observação";
       modalOverlay.classList.add("show");
       observacaoTexto.focus();
     }
@@ -704,17 +759,20 @@
       const config = TIPOS[tipo];
       const registro = getRegistro(tipo, numero);
 
-      modalAtual = { tipo, numero };
+      modalAtual = { tipo, numero, modo: "visualizar" };
 
       modalTitulo.textContent = `Observação de ${config.prefixo} ${pad(numero, config.digits)}`;
+      modalTextoApoio.textContent = "Observação já salva e bloqueada para edição.";
       modalInfo.innerHTML = `
         <b>Documento:</b> ${config.nome}<br>
         <b>Número:</b> ${pad(numero, config.digits)}<br>
         <b>Data registrada:</b> ${formatarDataBR(registro.criadoEm)}
       `;
-      observacaoTexto.value = registro.observacao || "";
+      observacaoTexto.value = registro.observacao || "Sem observação cadastrada.";
+      observacaoTexto.disabled = true;
+      observacaoTexto.readOnly = true;
+      btnSalvarObservacao.style.display = "none";
       modalOverlay.classList.add("show");
-      observacaoTexto.focus();
     }
 
     function fecharModal() {
@@ -722,22 +780,24 @@
     }
 
     async function salvarObservacao() {
-      const { tipo, numero } = modalAtual;
+      const { tipo, numero, modo } = modalAtual;
       if (!tipo || !numero) return;
 
-      const obs = observacaoTexto.value.trim();
-      const existente = getRegistro(tipo, numero);
-
-      if (existente) {
-        db.ano2026[tipo].usados[String(numero)].observacao = obs;
-        await salvar();
-        renderGrid();
-        fecharModal();
-        setStatus(`Observação salva no número ${pad(numero, TIPOS[tipo].digits)}.`);
+      if (modo !== "novo") {
+        setStatus("Observação já bloqueada. Não é possível alterar.");
         return;
       }
 
+      const existente = getRegistro(tipo, numero);
+      if (existente) {
+        setStatus("Esse número já foi salvo anteriormente. A observação está bloqueada.");
+        fecharModal();
+        return;
+      }
+
+      const obs = observacaoTexto.value.trim();
       const resultado = registrarNumero(tipo, numero, obs);
+
       if (!resultado.ok) {
         alert(resultado.msg);
         return;
@@ -747,21 +807,21 @@
       renderGrid();
       fecharModal();
       numeroManualEl.value = "";
-      setStatus(`Número ${pad(numero, TIPOS[tipo].digits)} registrado com observação.`);
+      setStatus(`Número ${pad(numero, TIPOS[tipo].digits)} registrado com observação bloqueada.`);
     }
 
     function localizarNumero() {
-      const valor = Number(buscarNumeroEl.value);
       const tipo = tipoEl.value;
       const config = TIPOS[tipo];
+      const valor = Number(buscarNumeroEl.value);
 
-      if (!valor || valor < 1 || valor > config.max) {
-        alert(`Digite um número válido entre 1 e ${config.max}.`);
+      if (!valor || valor < config.min || valor > config.max) {
+        alert(`Digite um número válido entre ${pad(config.min, config.digits)} e ${pad(config.max, config.digits)}.`);
         return;
       }
 
       const botoes = [...document.querySelectorAll(".num")];
-      const alvo = botoes[valor - 1];
+      const alvo = botoes[valor - config.min];
       if (alvo) {
         alvo.scrollIntoView({ behavior: "smooth", block: "center" });
         alvo.style.boxShadow = "0 0 0 4px rgba(245, 158, 11, 0.35)";
