@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Controle Numérico de Documentos</title>
+
+<style>
+*{box-sizing:border-box;font-family:Arial}
+body{margin:0;background:#eef3f8}
+.container{max-width:1200px;margin:20px auto;background:#fff;padding:20px;border-radius:16px}
+h1{text-align:center;color:#0f4c81}
+
+.top{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;margin-bottom:15px}
+input,select,button{padding:10px;border-radius:8px;border:1px solid #ccc}
+
+button{cursor:pointer;font-weight:bold}
+.btn{background:#0f4c81;color:#fff}
+.btn2{background:#16a34a;color:#fff}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(55px,1fr));gap:6px}
+
+.num{
+padding:10px;
+border:1px solid #ccc;
+text-align:center;
+border-radius:8px;
+cursor:pointer;
+font-weight:bold;
+background:#fff;
+}
+
+.used{background:#0f4c81;color:#fff;text-decoration:line-through}
+.next{outline:3px solid #16a34a;background:#ecfdf3}
+
+.info{margin:15px 0;padding:10px;background:#f1f5f9;border-radius:10px}
+
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h1>📋 Controle Numérico</h1>
+
+<div class="top">
+<input type="month" id="mes">
+
+<select id="tipo"></select>
+
+<input type="number" id="manual" placeholder="Número">
+
+<button class="btn" onclick="marcarManual()">Marcar</button>
+</div>
+
+<div class="top">
+<button class="btn2" onclick="marcarProximo()">Marcar Próximo</button>
+<button onclick="salvar()">Salvar</button>
+</div>
+
+<div class="info" id="info"></div>
+
+<div class="grid" id="grid"></div>
+
+</div>
+
+<script>
+
+/* ======= CONFIG PRONTA ======= */
+const BIN_ID = "69cbc58536566621a8669c2e";
+const API_KEY = "$2a$10$zZG0IbSsjFx8uhKbysI2MurESZSHmb/kQxS6GJqggDJDjA2FFUeTu";
+/* ============================ */
+
+const URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+
+const tipos = {
+msg:{nome:"Mensagem Expressa",max:200,d:3},
+oficio:{nome:"Ofício",max:120,d:3},
+parte:{nome:"Parte",max:100,d:3}
+};
+
+let db={meses:{}};
+
+const mes=document.getElementById("mes");
+const tipo=document.getElementById("tipo");
+const grid=document.getElementById("grid");
+const info=document.getElementById("info");
+
+/* iniciar */
+mes.value=new Date().toISOString().slice(0,7);
+
+Object.entries(tipos).forEach(([k,v])=>{
+let o=document.createElement("option");
+o.value=k;
+o.textContent=v.nome;
+tipo.appendChild(o);
+});
+
+tipo.onchange=render;
+mes.onchange=render;
+
+/* funções */
+
+function pad(n,d){return String(n).padStart(d,"0")}
+
+function getLista(){
+let m=mes.value;
+let t=tipo.value;
+
+if(!db.meses[m]) db.meses[m]={};
+if(!db.meses[m][t]) db.meses[m][t]=[];
+
+return db.meses[m][t];
+}
+
+function getProx(){
+let lista=getLista();
+let max=tipos[tipo.value].max;
+
+for(let i=1;i<=max;i++){
+if(!lista.includes(i)) return i;
+}
+return null;
+}
+
+function render(){
+
+let lista=getLista();
+let config=tipos[tipo.value];
+let prox=getProx();
+
+grid.innerHTML="";
+
+for(let i=1;i<=config.max;i++){
+let div=document.createElement("div");
+div.className="num";
+div.textContent=pad(i,config.d);
+
+if(lista.includes(i)) div.classList.add("used");
+if(i===prox) div.classList.add("next");
+
+div.onclick=()=>toggle(i);
+
+grid.appendChild(div);
+}
+
+info.innerHTML=`
+<b>Documento:</b> ${config.nome}<br>
+<b>Próximo:</b> ${prox?pad(prox,config.d):"FIM"}<br>
+<b>Total usados:</b> ${lista.length}
+`;
+}
+
+function toggle(n){
+let lista=getLista();
+
+if(lista.includes(n)){
+db.meses[mes.value][tipo.value]=lista.filter(x=>x!==n);
+}else{
+lista.push(n);
+}
+
+render();
+salvar();
+}
+
+function marcarManual(){
+let n=parseInt(document.getElementById("manual").value);
+if(!n) return;
+
+let lista=getLista();
+if(!lista.includes(n)) lista.push(n);
+
+render();
+salvar();
+}
+
+function marcarProximo(){
+let n=getProx();
+if(!n) return;
+
+let lista=getLista();
+lista.push(n);
+
+render();
+salvar();
+}
+
+async function salvar(){
+await fetch(URL,{
+method:"PUT",
+headers:{
+"Content-Type":"application/json",
+"X-Access-Key":API_KEY
+},
+body:JSON.stringify(db)
+});
+}
+
+async function carregar(){
+try{
+let r=await fetch(URL+"/latest",{headers:{"X-Access-Key":API_KEY}});
+let j=await r.json();
+db=j.record||{meses:{}};
+}catch{}
+render();
+}
+
+carregar();
+
+</script>
+
+</body>
+</html>
