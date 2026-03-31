@@ -38,7 +38,7 @@
 
     .top {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr auto;
+      grid-template-columns: 1fr 1fr auto auto;
       gap: 10px;
       margin-bottom: 14px;
     }
@@ -136,13 +136,6 @@
       color: #15361f;
     }
 
-    .num.used.next {
-      color: #fff;
-      outline: none;
-      background: #0f4c81;
-      border-color: #0f4c81;
-    }
-
     .note-indicator {
       position: absolute;
       right: 4px;
@@ -185,7 +178,8 @@
       border-color: #0f172a transparent transparent transparent;
     }
 
-    .num.has-note:hover .note-bubble {
+    .num.has-note:hover .note-bubble,
+    .num.used:hover .note-bubble {
       opacity: 1;
       visibility: visible;
     }
@@ -320,21 +314,21 @@
   <div class="container">
     <h1>📋 Controle Numérico</h1>
     <div class="subtitle">
-      Controle anual sequencial 2026 • sem repetição entre os meses • com observação por número
+      Controle anual sequencial 2026 • sem repetição • com observação e data automática
     </div>
 
     <div class="top">
-      <select id="mes"></select>
       <select id="tipo"></select>
-      <input type="number" id="numeroManual" placeholder="Digite o número" min="1" />
+      <input type="number" id="numeroManual" placeholder="Digite o próximo número" min="1" />
       <button class="btn-primary" onclick="marcarNumeroManual()">Marcar</button>
+      <button class="btn-green" onclick="marcarProximo()">Marcar Próximo</button>
     </div>
 
     <div class="top">
-      <button class="btn-green" onclick="marcarProximo()">Marcar Próximo</button>
       <button class="btn-gray" onclick="salvar()">Salvar</button>
       <button class="btn-gray" onclick="localizarNumero()">Localizar Número</button>
       <input type="number" id="buscarNumero" placeholder="Buscar número" min="1" />
+      <div></div>
     </div>
 
     <div class="info" id="info"></div>
@@ -342,7 +336,7 @@
     <div class="number-grid" id="grid"></div>
 
     <div class="used-list">
-      <h3>Números já usados no ano de 2026</h3>
+      <h3>Números já usados em 2026</h3>
       <div class="used-tags" id="usedTags"></div>
     </div>
 
@@ -352,7 +346,7 @@
   <div class="modal-overlay" id="modalOverlay">
     <div class="modal">
       <h2 id="modalTitulo">Observação do número</h2>
-      <p>Clique em salvar para registrar onde esse número foi utilizado.</p>
+      <p>Registre onde esse número foi utilizado.</p>
 
       <div class="mini-info" id="modalInfo"></div>
 
@@ -427,21 +421,6 @@
       }
     };
 
-    const MESES_2026 = [
-      { value: "2026-01", nome: "janeiro de 2026" },
-      { value: "2026-02", nome: "fevereiro de 2026" },
-      { value: "2026-03", nome: "março de 2026" },
-      { value: "2026-04", nome: "abril de 2026" },
-      { value: "2026-05", nome: "maio de 2026" },
-      { value: "2026-06", nome: "junho de 2026" },
-      { value: "2026-07", nome: "julho de 2026" },
-      { value: "2026-08", nome: "agosto de 2026" },
-      { value: "2026-09", nome: "setembro de 2026" },
-      { value: "2026-10", nome: "outubro de 2026" },
-      { value: "2026-11", nome: "novembro de 2026" },
-      { value: "2026-12", nome: "dezembro de 2026" }
-    ];
-
     let db = {
       ano2026: {}
     };
@@ -451,7 +430,6 @@
       numero: null
     };
 
-    const mesEl = document.getElementById("mes");
     const tipoEl = document.getElementById("tipo");
     const numeroManualEl = document.getElementById("numeroManual");
     const buscarNumeroEl = document.getElementById("buscarNumero");
@@ -482,6 +460,13 @@
       statusEl.textContent = msg;
     }
 
+    function formatarDataBR(dataIso) {
+      if (!dataIso) return "Data não registrada";
+      const d = new Date(dataIso);
+      if (isNaN(d.getTime())) return dataIso;
+      return d.toLocaleDateString("pt-BR");
+    }
+
     function ensureStructure() {
       if (!db.ano2026 || typeof db.ano2026 !== "object") {
         db.ano2026 = {};
@@ -499,14 +484,6 @@
     }
 
     function initSelects() {
-      mesEl.innerHTML = "";
-      MESES_2026.forEach(m => {
-        const option = document.createElement("option");
-        option.value = m.value;
-        option.textContent = m.nome;
-        mesEl.appendChild(option);
-      });
-
       tipoEl.innerHTML = "";
       Object.entries(TIPOS).forEach(([key, item]) => {
         const option = document.createElement("option");
@@ -514,13 +491,6 @@
         option.textContent = item.nome;
         tipoEl.appendChild(option);
       });
-
-      mesEl.value = "2026-03";
-    }
-
-    function getMesNome(valor) {
-      const encontrado = MESES_2026.find(m => m.value === valor);
-      return encontrado ? encontrado.nome : valor;
     }
 
     function getUsadosDoTipo(tipo) {
@@ -553,7 +523,7 @@
       return usados.length ? usados[usados.length - 1] : null;
     }
 
-    function registrarNumero(tipo, numero, mes, observacao = "") {
+    function registrarNumero(tipo, numero, observacao = "") {
       ensureStructure();
 
       if (numeroJaUsado(tipo, numero)) {
@@ -572,7 +542,6 @@
       }
 
       db.ano2026[tipo].usados[String(numero)] = {
-        mes,
         observacao: observacao || "",
         criadoEm: new Date().toISOString()
       };
@@ -589,9 +558,8 @@
 
       infoEl.innerHTML = `
         <b>Documento:</b> ${config.nome}<br>
-        <b>Mês selecionado:</b> ${getMesNome(mesEl.value)}<br>
         <b>Próximo número obrigatório:</b> ${proximo ? pad(proximo, config.digits) : "Fim"}<br>
-        <b>Último usado no ano:</b> ${ultimo ? pad(ultimo, config.digits) : "---"}<br>
+        <b>Último usado em 2026:</b> ${ultimo ? pad(ultimo, config.digits) : "---"}<br>
         <b>Total usados em 2026:</b> ${usados.length}
       `;
     }
@@ -604,7 +572,7 @@
       return `
         <div class="note-bubble">
           <div class="line1">${escapeHtml(config.prefixo)} ${pad(numero, config.digits)}</div>
-          <div class="line2">Usado em ${escapeHtml(getMesNome(registro.mes))}</div>
+          <div class="line2">Registrado em ${escapeHtml(formatarDataBR(registro.criadoEm))}</div>
           <div class="line3">${escapeHtml(obs)}</div>
         </div>
       `;
@@ -636,15 +604,13 @@
             note.className = "note-indicator";
             note.textContent = "📝";
             div.appendChild(note);
-
-            const bubble = document.createElement("div");
-            bubble.innerHTML = criarBalaoObservacao(registro, config, i);
-            div.appendChild(bubble.firstElementChild);
           }
 
-          div.title = registro.observacao
-            ? `Usado em ${getMesNome(registro.mes)}`
-            : `Usado em ${getMesNome(registro.mes)}`;
+          const bubble = document.createElement("div");
+          bubble.innerHTML = criarBalaoObservacao(registro, config, i);
+          div.appendChild(bubble.firstElementChild);
+
+          div.title = `Registrado em ${formatarDataBR(registro.criadoEm)}`;
         } else if (i === proximo) {
           div.classList.add("next");
           div.title = "Próximo número obrigatório";
@@ -680,7 +646,7 @@
         const temObs = registro && registro.observacao && registro.observacao.trim();
         const span = document.createElement("span");
         span.className = "tag";
-        span.textContent = `${config.prefixo} ${pad(num, config.digits)} • ${getMesNome(registro.mes)}${temObs ? " • 📝" : ""}`;
+        span.textContent = `${config.prefixo} ${pad(num, config.digits)} • ${formatarDataBR(registro.criadoEm)}${temObs ? " • 📝" : ""}`;
         usedTagsEl.appendChild(span);
       });
     }
@@ -727,7 +693,7 @@
       modalInfo.innerHTML = `
         <b>Documento:</b> ${config.nome}<br>
         <b>Número:</b> ${pad(numero, config.digits)}<br>
-        <b>Mês de uso:</b> ${getMesNome(mesEl.value)}
+        <b>Data do registro:</b> ${formatarDataBR(new Date().toISOString())}
       `;
       observacaoTexto.value = "";
       modalOverlay.classList.add("show");
@@ -744,7 +710,7 @@
       modalInfo.innerHTML = `
         <b>Documento:</b> ${config.nome}<br>
         <b>Número:</b> ${pad(numero, config.digits)}<br>
-        <b>Mês usado:</b> ${getMesNome(registro.mes)}
+        <b>Data registrada:</b> ${formatarDataBR(registro.criadoEm)}
       `;
       observacaoTexto.value = registro.observacao || "";
       modalOverlay.classList.add("show");
@@ -771,7 +737,7 @@
         return;
       }
 
-      const resultado = registrarNumero(tipo, numero, mesEl.value, obs);
+      const resultado = registrarNumero(tipo, numero, obs);
       if (!resultado.ok) {
         alert(resultado.msg);
         return;
@@ -806,7 +772,7 @@
 
       const registro = getRegistro(tipo, valor);
       if (registro) {
-        setStatus(`Número ${pad(valor, config.digits)} usado em ${getMesNome(registro.mes)}${registro.observacao ? " • " + registro.observacao : ""}`);
+        setStatus(`Número ${pad(valor, config.digits)} registrado em ${formatarDataBR(registro.criadoEm)}${registro.observacao ? " • " + registro.observacao : ""}`);
       } else {
         setStatus(`Número ${pad(valor, config.digits)} ainda não foi usado.`);
       }
@@ -852,7 +818,6 @@
       setStatus("Dados carregados.");
     }
 
-    mesEl.addEventListener("change", renderGrid);
     tipoEl.addEventListener("change", renderGrid);
 
     modalOverlay.addEventListener("click", (e) => {
