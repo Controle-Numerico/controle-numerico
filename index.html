@@ -1,214 +1,868 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Controle Numérico de Documentos</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Controle Numérico 2026</title>
+  <style>
+    * { box-sizing: border-box; font-family: Arial, Helvetica, sans-serif; }
 
-<style>
-*{box-sizing:border-box;font-family:Arial}
-body{margin:0;background:#eef3f8}
-.container{max-width:1200px;margin:20px auto;background:#fff;padding:20px;border-radius:16px}
-h1{text-align:center;color:#0f4c81}
+    body {
+      margin: 0;
+      background: #eef3f8;
+      color: #1f2937;
+    }
 
-.top{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;margin-bottom:15px}
-input,select,button{padding:10px;border-radius:8px;border:1px solid #ccc}
+    .container {
+      max-width: 1350px;
+      margin: 20px auto;
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 12px 35px rgba(0,0,0,0.08);
+      padding: 22px;
+    }
 
-button{cursor:pointer;font-weight:bold}
-.btn{background:#0f4c81;color:#fff}
-.btn2{background:#16a34a;color:#fff}
+    h1 {
+      margin: 0 0 8px;
+      text-align: center;
+      color: #0f4c81;
+      font-size: 40px;
+    }
 
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(55px,1fr));gap:6px}
+    .subtitle {
+      text-align: center;
+      color: #607284;
+      margin-bottom: 20px;
+      font-size: 15px;
+    }
 
-.num{
-padding:10px;
-border:1px solid #ccc;
-text-align:center;
-border-radius:8px;
-cursor:pointer;
-font-weight:bold;
-background:#fff;
-}
+    .top {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr auto;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
 
-.used{background:#0f4c81;color:#fff;text-decoration:line-through}
-.next{outline:3px solid #16a34a;background:#ecfdf3}
+    input, select, button, textarea {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #c9d4df;
+      font-size: 16px;
+    }
 
-.info{margin:15px 0;padding:10px;background:#f1f5f9;border-radius:10px}
+    textarea {
+      resize: vertical;
+      min-height: 120px;
+    }
 
-</style>
+    button {
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: #0f4c81;
+      color: white;
+    }
+
+    .btn-primary:hover { background: #0c3d68; }
+
+    .btn-green {
+      background: #1ea446;
+      color: white;
+    }
+
+    .btn-green:hover { background: #18853a; }
+
+    .btn-gray {
+      background: #eceff3;
+      color: #222;
+    }
+
+    .btn-gray:hover {
+      background: #dde5ec;
+    }
+
+    .info {
+      background: #eef3f8;
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 18px;
+      line-height: 1.5;
+      font-size: 16px;
+    }
+
+    .number-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(62px, 1fr));
+      gap: 8px;
+    }
+
+    .num {
+      position: relative;
+      background: #fff;
+      border: 1px solid #cfd7df;
+      border-radius: 10px;
+      padding: 12px 6px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 14px;
+      cursor: pointer;
+      user-select: none;
+      transition: 0.15s;
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: visible;
+    }
+
+    .num:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+
+    .num.used {
+      background: #0f4c81;
+      color: #fff;
+    }
+
+    .num.next {
+      outline: 3px solid rgba(34,197,94,0.28);
+      border-color: #1ea446;
+      background: #ecfdf3;
+      color: #15361f;
+    }
+
+    .num.used.next {
+      color: #fff;
+      outline: none;
+      background: #0f4c81;
+      border-color: #0f4c81;
+    }
+
+    .note-indicator {
+      position: absolute;
+      right: 4px;
+      top: 2px;
+      font-size: 12px;
+      z-index: 2;
+    }
+
+    .note-bubble {
+      position: absolute;
+      left: 50%;
+      bottom: calc(100% + 10px);
+      transform: translateX(-50%);
+      min-width: 230px;
+      max-width: 320px;
+      background: #0f172a;
+      color: #fff;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 12px;
+      line-height: 1.45;
+      text-align: left;
+      box-shadow: 0 10px 26px rgba(0,0,0,0.22);
+      opacity: 0;
+      pointer-events: none;
+      visibility: hidden;
+      transition: opacity 0.15s ease;
+      z-index: 50;
+      white-space: normal;
+    }
+
+    .note-bubble::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border-width: 7px;
+      border-style: solid;
+      border-color: #0f172a transparent transparent transparent;
+    }
+
+    .num.has-note:hover .note-bubble {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .note-bubble .line1 {
+      font-weight: bold;
+      margin-bottom: 4px;
+      color: #bfdbfe;
+    }
+
+    .note-bubble .line2 {
+      margin-bottom: 4px;
+      color: #e5e7eb;
+    }
+
+    .note-bubble .line3 {
+      color: #ffffff;
+      word-break: break-word;
+    }
+
+    .alert {
+      margin-top: 14px;
+      background: #f8fbff;
+      border: 1px solid #d8e5f1;
+      border-radius: 12px;
+      padding: 12px 14px;
+      color: #35516c;
+      font-size: 14px;
+    }
+
+    .used-list {
+      margin-top: 18px;
+      padding: 14px;
+      background: #f8fbff;
+      border: 1px solid #dbe7f1;
+      border-radius: 14px;
+    }
+
+    .used-list h3 {
+      margin: 0 0 10px;
+      color: #0f4c81;
+      font-size: 18px;
+    }
+
+    .used-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tag {
+      background: #e8f1f8;
+      color: #0f4c81;
+      border: 1px solid #cddceb;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 13px;
+      font-weight: bold;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 1000;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal {
+      background: #fff;
+      width: 100%;
+      max-width: 620px;
+      border-radius: 18px;
+      box-shadow: 0 18px 45px rgba(0,0,0,0.16);
+      padding: 20px;
+    }
+
+    .modal h2 {
+      margin: 0 0 8px;
+      color: #0f4c81;
+      font-size: 24px;
+    }
+
+    .modal p {
+      margin: 0 0 14px;
+      color: #52667b;
+    }
+
+    .modal-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .mini-info {
+      background: #f5f9fd;
+      border: 1px solid #dae6f2;
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 12px;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 980px) {
+      .top {
+        grid-template-columns: 1fr;
+      }
+
+      h1 {
+        font-size: 32px;
+      }
+
+      .modal-actions {
+        grid-template-columns: 1fr;
+      }
+
+      .note-bubble {
+        display: none;
+      }
+    }
+  </style>
 </head>
-
 <body>
-<div class="container">
+  <div class="container">
+    <h1>📋 Controle Numérico</h1>
+    <div class="subtitle">
+      Controle anual sequencial 2026 • sem repetição entre os meses • com observação por número
+    </div>
 
-<h1>📋 Controle Numérico</h1>
+    <div class="top">
+      <select id="mes"></select>
+      <select id="tipo"></select>
+      <input type="number" id="numeroManual" placeholder="Digite o número" min="1" />
+      <button class="btn-primary" onclick="marcarNumeroManual()">Marcar</button>
+    </div>
 
-<div class="top">
-<input type="month" id="mes">
+    <div class="top">
+      <button class="btn-green" onclick="marcarProximo()">Marcar Próximo</button>
+      <button class="btn-gray" onclick="salvar()">Salvar</button>
+      <button class="btn-gray" onclick="localizarNumero()">Localizar Número</button>
+      <input type="number" id="buscarNumero" placeholder="Buscar número" min="1" />
+    </div>
 
-<select id="tipo"></select>
+    <div class="info" id="info"></div>
 
-<input type="number" id="manual" placeholder="Número">
+    <div class="number-grid" id="grid"></div>
 
-<button class="btn" onclick="marcarManual()">Marcar</button>
-</div>
+    <div class="used-list">
+      <h3>Números já usados no ano de 2026</h3>
+      <div class="used-tags" id="usedTags"></div>
+    </div>
 
-<div class="top">
-<button class="btn2" onclick="marcarProximo()">Marcar Próximo</button>
-<button onclick="salvar()">Salvar</button>
-</div>
+    <div class="alert" id="status">Sistema pronto.</div>
+  </div>
 
-<div class="info" id="info"></div>
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <h2 id="modalTitulo">Observação do número</h2>
+      <p>Clique em salvar para registrar onde esse número foi utilizado.</p>
 
-<div class="grid" id="grid"></div>
+      <div class="mini-info" id="modalInfo"></div>
 
-</div>
+      <textarea id="observacaoTexto" placeholder="Ex.: Usado em email para setor financeiro, protocolo interno, cartório, destinatário, assunto..."></textarea>
 
-<script>
+      <div class="modal-actions">
+        <button class="btn-primary" onclick="salvarObservacao()">Salvar observação</button>
+        <button class="btn-gray" onclick="fecharModal()">Fechar</button>
+      </div>
+    </div>
+  </div>
 
-/* ======= CONFIG PRONTA ======= */
-const BIN_ID = "69cbc58536566621a8669c2e";
-const API_KEY = "$2a$10$zZG0IbSsjFx8uhKbysI2MurESZSHmb/kQxS6GJqggDJDjA2FFUeTu";
-/* ============================ */
+  <script>
+    const BIN_ID = "69cbc58536566621a8669c2e";
+    const API_KEY = "$2a$10$zZG0IbSsjFx8uhKbysI2MurESZSHmb/kQxS6GJqggDJDjA2FFUeTu";
+    const URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
-const URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+    const TIPOS = {
+      mensagensExpressas: {
+        nome: "Mensagens Expressas",
+        prefixo: "Mensagem Expressa",
+        max: 220,
+        digits: 3
+      },
+      guiaCautelas: {
+        nome: "Guia de Cautelas",
+        prefixo: "Guia de Cautelas",
+        max: 40,
+        digits: 2
+      },
+      notaBI: {
+        nome: "Nota para BI",
+        prefixo: "Nota para BI",
+        max: 220,
+        digits: 2
+      },
+      oficiosExpedidos: {
+        nome: "Ofícios Expedidos",
+        prefixo: "Ofício Expedido",
+        max: 120,
+        digits: 3
+      },
+      relatorioVulto: {
+        nome: "Relatório / Comunicação de Ocorrência de Vulto",
+        prefixo: "Relatório de Vulto",
+        max: 40,
+        digits: 2
+      },
+      guiasMalote: {
+        nome: "Guias de Malote",
+        prefixo: "Guia de Malote",
+        max: 40,
+        digits: 2
+      },
+      partes: {
+        nome: "Partes",
+        prefixo: "Parte",
+        max: 100,
+        digits: 2
+      },
+      numeroProcessoFunrebom: {
+        nome: "Número Processo Funrebom",
+        prefixo: "Processo Funrebom",
+        max: 100,
+        digits: 3
+      },
+      ordensServico: {
+        nome: "Ordens de Serviço",
+        prefixo: "Ordem de Serviço",
+        max: 40,
+        digits: 2
+      }
+    };
 
-const tipos = {
-msg:{nome:"Mensagem Expressa",max:200,d:3},
-oficio:{nome:"Ofício",max:120,d:3},
-parte:{nome:"Parte",max:100,d:3}
-};
+    const MESES_2026 = [
+      { value: "2026-01", nome: "janeiro de 2026" },
+      { value: "2026-02", nome: "fevereiro de 2026" },
+      { value: "2026-03", nome: "março de 2026" },
+      { value: "2026-04", nome: "abril de 2026" },
+      { value: "2026-05", nome: "maio de 2026" },
+      { value: "2026-06", nome: "junho de 2026" },
+      { value: "2026-07", nome: "julho de 2026" },
+      { value: "2026-08", nome: "agosto de 2026" },
+      { value: "2026-09", nome: "setembro de 2026" },
+      { value: "2026-10", nome: "outubro de 2026" },
+      { value: "2026-11", nome: "novembro de 2026" },
+      { value: "2026-12", nome: "dezembro de 2026" }
+    ];
 
-let db={meses:{}};
+    let db = {
+      ano2026: {}
+    };
 
-const mes=document.getElementById("mes");
-const tipo=document.getElementById("tipo");
-const grid=document.getElementById("grid");
-const info=document.getElementById("info");
+    let modalAtual = {
+      tipo: null,
+      numero: null
+    };
 
-/* iniciar */
-mes.value=new Date().toISOString().slice(0,7);
+    const mesEl = document.getElementById("mes");
+    const tipoEl = document.getElementById("tipo");
+    const numeroManualEl = document.getElementById("numeroManual");
+    const buscarNumeroEl = document.getElementById("buscarNumero");
+    const infoEl = document.getElementById("info");
+    const gridEl = document.getElementById("grid");
+    const usedTagsEl = document.getElementById("usedTags");
+    const statusEl = document.getElementById("status");
 
-Object.entries(tipos).forEach(([k,v])=>{
-let o=document.createElement("option");
-o.value=k;
-o.textContent=v.nome;
-tipo.appendChild(o);
-});
+    const modalOverlay = document.getElementById("modalOverlay");
+    const modalTitulo = document.getElementById("modalTitulo");
+    const modalInfo = document.getElementById("modalInfo");
+    const observacaoTexto = document.getElementById("observacaoTexto");
 
-tipo.onchange=render;
-mes.onchange=render;
+    function pad(num, digits) {
+      return String(num).padStart(digits, "0");
+    }
 
-/* funções */
+    function escapeHtml(text) {
+      return String(text || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
 
-function pad(n,d){return String(n).padStart(d,"0")}
+    function setStatus(msg) {
+      statusEl.textContent = msg;
+    }
 
-function getLista(){
-let m=mes.value;
-let t=tipo.value;
+    function ensureStructure() {
+      if (!db.ano2026 || typeof db.ano2026 !== "object") {
+        db.ano2026 = {};
+      }
 
-if(!db.meses[m]) db.meses[m]={};
-if(!db.meses[m][t]) db.meses[m][t]=[];
+      Object.keys(TIPOS).forEach(tipo => {
+        if (!db.ano2026[tipo] || typeof db.ano2026[tipo] !== "object") {
+          db.ano2026[tipo] = { usados: {} };
+        }
 
-return db.meses[m][t];
-}
+        if (!db.ano2026[tipo].usados || typeof db.ano2026[tipo].usados !== "object") {
+          db.ano2026[tipo].usados = {};
+        }
+      });
+    }
 
-function getProx(){
-let lista=getLista();
-let max=tipos[tipo.value].max;
+    function initSelects() {
+      mesEl.innerHTML = "";
+      MESES_2026.forEach(m => {
+        const option = document.createElement("option");
+        option.value = m.value;
+        option.textContent = m.nome;
+        mesEl.appendChild(option);
+      });
 
-for(let i=1;i<=max;i++){
-if(!lista.includes(i)) return i;
-}
-return null;
-}
+      tipoEl.innerHTML = "";
+      Object.entries(TIPOS).forEach(([key, item]) => {
+        const option = document.createElement("option");
+        option.value = key;
+        option.textContent = item.nome;
+        tipoEl.appendChild(option);
+      });
 
-function render(){
+      mesEl.value = "2026-03";
+    }
 
-let lista=getLista();
-let config=tipos[tipo.value];
-let prox=getProx();
+    function getMesNome(valor) {
+      const encontrado = MESES_2026.find(m => m.value === valor);
+      return encontrado ? encontrado.nome : valor;
+    }
 
-grid.innerHTML="";
+    function getUsadosDoTipo(tipo) {
+      ensureStructure();
+      const usadosObj = db.ano2026[tipo].usados;
+      return Object.keys(usadosObj)
+        .map(n => Number(n))
+        .sort((a, b) => a - b);
+    }
 
-for(let i=1;i<=config.max;i++){
-let div=document.createElement("div");
-div.className="num";
-div.textContent=pad(i,config.d);
+    function getRegistro(tipo, numero) {
+      ensureStructure();
+      return db.ano2026[tipo].usados[String(numero)] || null;
+    }
 
-if(lista.includes(i)) div.classList.add("used");
-if(i===prox) div.classList.add("next");
+    function numeroJaUsado(tipo, numero) {
+      return !!getRegistro(tipo, numero);
+    }
 
-div.onclick=()=>toggle(i);
+    function getProximoDisponivel(tipo) {
+      const config = TIPOS[tipo];
+      for (let i = 1; i <= config.max; i++) {
+        if (!numeroJaUsado(tipo, i)) return i;
+      }
+      return null;
+    }
 
-grid.appendChild(div);
-}
+    function getUltimoUsado(tipo) {
+      const usados = getUsadosDoTipo(tipo);
+      return usados.length ? usados[usados.length - 1] : null;
+    }
 
-info.innerHTML=`
-<b>Documento:</b> ${config.nome}<br>
-<b>Próximo:</b> ${prox?pad(prox,config.d):"FIM"}<br>
-<b>Total usados:</b> ${lista.length}
-`;
-}
+    function registrarNumero(tipo, numero, mes, observacao = "") {
+      ensureStructure();
 
-function toggle(n){
-let lista=getLista();
+      if (numeroJaUsado(tipo, numero)) {
+        return {
+          ok: false,
+          msg: "Esse número já foi usado anteriormente e não pode repetir."
+        };
+      }
 
-if(lista.includes(n)){
-db.meses[mes.value][tipo.value]=lista.filter(x=>x!==n);
-}else{
-lista.push(n);
-}
+      const proximo = getProximoDisponivel(tipo);
+      if (numero !== proximo) {
+        return {
+          ok: false,
+          msg: `A sequência é obrigatória. O próximo número disponível é ${pad(proximo, TIPOS[tipo].digits)}.`
+        };
+      }
 
-render();
-salvar();
-}
+      db.ano2026[tipo].usados[String(numero)] = {
+        mes,
+        observacao: observacao || "",
+        criadoEm: new Date().toISOString()
+      };
 
-function marcarManual(){
-let n=parseInt(document.getElementById("manual").value);
-if(!n) return;
+      return { ok: true };
+    }
 
-let lista=getLista();
-if(!lista.includes(n)) lista.push(n);
+    function atualizarInfo() {
+      const tipo = tipoEl.value;
+      const config = TIPOS[tipo];
+      const proximo = getProximoDisponivel(tipo);
+      const usados = getUsadosDoTipo(tipo);
+      const ultimo = getUltimoUsado(tipo);
 
-render();
-salvar();
-}
+      infoEl.innerHTML = `
+        <b>Documento:</b> ${config.nome}<br>
+        <b>Mês selecionado:</b> ${getMesNome(mesEl.value)}<br>
+        <b>Próximo número obrigatório:</b> ${proximo ? pad(proximo, config.digits) : "Fim"}<br>
+        <b>Último usado no ano:</b> ${ultimo ? pad(ultimo, config.digits) : "---"}<br>
+        <b>Total usados em 2026:</b> ${usados.length}
+      `;
+    }
 
-function marcarProximo(){
-let n=getProx();
-if(!n) return;
+    function criarBalaoObservacao(registro, config, numero) {
+      const obs = registro.observacao && registro.observacao.trim()
+        ? registro.observacao.trim()
+        : "Sem observação cadastrada.";
 
-let lista=getLista();
-lista.push(n);
+      return `
+        <div class="note-bubble">
+          <div class="line1">${escapeHtml(config.prefixo)} ${pad(numero, config.digits)}</div>
+          <div class="line2">Usado em ${escapeHtml(getMesNome(registro.mes))}</div>
+          <div class="line3">${escapeHtml(obs)}</div>
+        </div>
+      `;
+    }
 
-render();
-salvar();
-}
+    function renderGrid() {
+      const tipo = tipoEl.value;
+      const config = TIPOS[tipo];
+      const proximo = getProximoDisponivel(tipo);
 
-async function salvar(){
-await fetch(URL,{
-method:"PUT",
-headers:{
-"Content-Type":"application/json",
-"X-Access-Key":API_KEY
-},
-body:JSON.stringify(db)
-});
-}
+      gridEl.innerHTML = "";
 
-async function carregar(){
-try{
-let r=await fetch(URL+"/latest",{headers:{"X-Access-Key":API_KEY}});
-let j=await r.json();
-db=j.record||{meses:{}};
-}catch{}
-render();
-}
+      for (let i = 1; i <= config.max; i++) {
+        const registro = getRegistro(tipo, i);
+        const div = document.createElement("div");
+        div.className = "num";
+        div.textContent = pad(i, config.digits);
 
-carregar();
+        if (registro) {
+          div.classList.add("used");
+          div.onclick = () => abrirModalObservacao(tipo, i);
 
-</script>
+          const temObs = registro.observacao && registro.observacao.trim();
 
+          if (temObs) {
+            div.classList.add("has-note");
+
+            const note = document.createElement("span");
+            note.className = "note-indicator";
+            note.textContent = "📝";
+            div.appendChild(note);
+
+            const bubble = document.createElement("div");
+            bubble.innerHTML = criarBalaoObservacao(registro, config, i);
+            div.appendChild(bubble.firstElementChild);
+          }
+
+          div.title = registro.observacao
+            ? `Usado em ${getMesNome(registro.mes)}`
+            : `Usado em ${getMesNome(registro.mes)}`;
+        } else if (i === proximo) {
+          div.classList.add("next");
+          div.title = "Próximo número obrigatório";
+          div.onclick = () => registrarProximoComModal();
+        } else {
+          div.title = "Número ainda indisponível. A sequência é obrigatória.";
+          div.onclick = () => {
+            setStatus(`Não é possível pular sequência. Use o número ${pad(proximo, config.digits)}.`);
+          };
+        }
+
+        gridEl.appendChild(div);
+      }
+
+      atualizarListaUsados();
+      atualizarInfo();
+    }
+
+    function atualizarListaUsados() {
+      const tipo = tipoEl.value;
+      const config = TIPOS[tipo];
+      const usados = getUsadosDoTipo(tipo);
+
+      usedTagsEl.innerHTML = "";
+
+      if (!usados.length) {
+        usedTagsEl.innerHTML = `<span class="tag">Nenhum número usado em 2026</span>`;
+        return;
+      }
+
+      usados.forEach(num => {
+        const registro = getRegistro(tipo, num);
+        const temObs = registro && registro.observacao && registro.observacao.trim();
+        const span = document.createElement("span");
+        span.className = "tag";
+        span.textContent = `${config.prefixo} ${pad(num, config.digits)} • ${getMesNome(registro.mes)}${temObs ? " • 📝" : ""}`;
+        usedTagsEl.appendChild(span);
+      });
+    }
+
+    function marcarNumeroManual() {
+      const tipo = tipoEl.value;
+      const numero = Number(numeroManualEl.value);
+
+      if (!numero) {
+        alert("Digite um número válido.");
+        return;
+      }
+
+      const proximo = getProximoDisponivel(tipo);
+      if (numero !== proximo) {
+        alert(`A sequência é obrigatória. O próximo número é ${pad(proximo, TIPOS[tipo].digits)}.`);
+        return;
+      }
+
+      modalAtual = { tipo, numero };
+      abrirModalNovoNumero(tipo, numero);
+    }
+
+    function marcarProximo() {
+      registrarProximoComModal();
+    }
+
+    function registrarProximoComModal() {
+      const tipo = tipoEl.value;
+      const numero = getProximoDisponivel(tipo);
+
+      if (!numero) {
+        alert("Todos os números desse documento já foram usados.");
+        return;
+      }
+
+      modalAtual = { tipo, numero };
+      abrirModalNovoNumero(tipo, numero);
+    }
+
+    function abrirModalNovoNumero(tipo, numero) {
+      const config = TIPOS[tipo];
+      modalTitulo.textContent = `Registrar ${config.prefixo} ${pad(numero, config.digits)}`;
+      modalInfo.innerHTML = `
+        <b>Documento:</b> ${config.nome}<br>
+        <b>Número:</b> ${pad(numero, config.digits)}<br>
+        <b>Mês de uso:</b> ${getMesNome(mesEl.value)}
+      `;
+      observacaoTexto.value = "";
+      modalOverlay.classList.add("show");
+      observacaoTexto.focus();
+    }
+
+    function abrirModalObservacao(tipo, numero) {
+      const config = TIPOS[tipo];
+      const registro = getRegistro(tipo, numero);
+
+      modalAtual = { tipo, numero };
+
+      modalTitulo.textContent = `Observação de ${config.prefixo} ${pad(numero, config.digits)}`;
+      modalInfo.innerHTML = `
+        <b>Documento:</b> ${config.nome}<br>
+        <b>Número:</b> ${pad(numero, config.digits)}<br>
+        <b>Mês usado:</b> ${getMesNome(registro.mes)}
+      `;
+      observacaoTexto.value = registro.observacao || "";
+      modalOverlay.classList.add("show");
+      observacaoTexto.focus();
+    }
+
+    function fecharModal() {
+      modalOverlay.classList.remove("show");
+    }
+
+    async function salvarObservacao() {
+      const { tipo, numero } = modalAtual;
+      if (!tipo || !numero) return;
+
+      const obs = observacaoTexto.value.trim();
+      const existente = getRegistro(tipo, numero);
+
+      if (existente) {
+        db.ano2026[tipo].usados[String(numero)].observacao = obs;
+        await salvar();
+        renderGrid();
+        fecharModal();
+        setStatus(`Observação salva no número ${pad(numero, TIPOS[tipo].digits)}.`);
+        return;
+      }
+
+      const resultado = registrarNumero(tipo, numero, mesEl.value, obs);
+      if (!resultado.ok) {
+        alert(resultado.msg);
+        return;
+      }
+
+      await salvar();
+      renderGrid();
+      fecharModal();
+      numeroManualEl.value = "";
+      setStatus(`Número ${pad(numero, TIPOS[tipo].digits)} registrado com observação.`);
+    }
+
+    function localizarNumero() {
+      const valor = Number(buscarNumeroEl.value);
+      const tipo = tipoEl.value;
+      const config = TIPOS[tipo];
+
+      if (!valor || valor < 1 || valor > config.max) {
+        alert(`Digite um número válido entre 1 e ${config.max}.`);
+        return;
+      }
+
+      const botoes = [...document.querySelectorAll(".num")];
+      const alvo = botoes[valor - 1];
+      if (alvo) {
+        alvo.scrollIntoView({ behavior: "smooth", block: "center" });
+        alvo.style.boxShadow = "0 0 0 4px rgba(245, 158, 11, 0.35)";
+        setTimeout(() => {
+          alvo.style.boxShadow = "";
+        }, 2000);
+      }
+
+      const registro = getRegistro(tipo, valor);
+      if (registro) {
+        setStatus(`Número ${pad(valor, config.digits)} usado em ${getMesNome(registro.mes)}${registro.observacao ? " • " + registro.observacao : ""}`);
+      } else {
+        setStatus(`Número ${pad(valor, config.digits)} ainda não foi usado.`);
+      }
+    }
+
+    async function salvar() {
+      try {
+        const resp = await fetch(URL, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Access-Key": API_KEY
+          },
+          body: JSON.stringify(db)
+        });
+
+        if (!resp.ok) throw new Error("Falha ao salvar.");
+        setStatus("Dados salvos com sucesso.");
+      } catch (e) {
+        console.error(e);
+        setStatus("Erro ao salvar no JsonBin.");
+      }
+    }
+
+    async function carregar() {
+      try {
+        const resp = await fetch(`${URL}/latest`, {
+          headers: {
+            "X-Access-Key": API_KEY
+          }
+        });
+
+        if (!resp.ok) throw new Error("Falha ao carregar.");
+        const json = await resp.json();
+        db = json.record || { ano2026: {} };
+      } catch (e) {
+        console.error(e);
+        db = { ano2026: {} };
+      }
+
+      ensureStructure();
+      renderGrid();
+      setStatus("Dados carregados.");
+    }
+
+    mesEl.addEventListener("change", renderGrid);
+    tipoEl.addEventListener("change", renderGrid);
+
+    modalOverlay.addEventListener("click", (e) => {
+      if (e.target === modalOverlay) {
+        fecharModal();
+      }
+    });
+
+    initSelects();
+    carregar();
+  </script>
 </body>
 </html>
