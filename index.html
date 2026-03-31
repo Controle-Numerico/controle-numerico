@@ -384,20 +384,6 @@
     const URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
     const TIPOS = {
-      guiaCautelas: {
-        nome: "Guia de Cautelas",
-        prefixo: "Guia de Cautelas",
-        min: 6,
-        max: 100,
-        digits: 2
-      },
-      guiasMalote: {
-        nome: "Guias de Malote",
-        prefixo: "Guia de Malote",
-        min: 1,
-        max: 200,
-        digits: 2
-      },
       mensagensExpressas: {
         nome: "Mensagens Expressas",
         prefixo: "Mensagem Expressa",
@@ -412,17 +398,10 @@
         max: 500,
         digits: 3
       },
-      numeroProcessoFunrebom: {
-        nome: "Número Processo Funrebom",
-        prefixo: "Processo Funrebom",
-        min: 1,
-        max: 100,
-        digits: 2
-      },
-      oficiosExpedidos: {
-        nome: "Ofícios Expedidos",
-        prefixo: "Ofício Expedido",
-        min: 4,
+      partes: {
+        nome: "Partes",
+        prefixo: "Parte",
+        min: 8,
         max: 500,
         digits: 3
       },
@@ -433,10 +412,10 @@
         max: 500,
         digits: 3
       },
-      partes: {
-        nome: "Partes",
-        prefixo: "Parte",
-        min: 8,
+      oficiosExpedidos: {
+        nome: "Ofícios Expedidos",
+        prefixo: "Ofício Expedido",
+        min: 4,
         max: 500,
         digits: 3
       },
@@ -446,6 +425,27 @@
         min: 1,
         max: 200,
         digits: 3
+      },
+      guiaCautelas: {
+        nome: "Guia de Cautelas",
+        prefixo: "Guia de Cautelas",
+        min: 6,
+        max: 100,
+        digits: 2
+      },
+      guiasMalote: {
+        nome: "Guias de Malote",
+        prefixo: "Guia de Malote",
+        min: 1,
+        max: 200,
+        digits: 2
+      },
+      numeroProcessoFunrebom: {
+        nome: "Número Processo Funrebom",
+        prefixo: "Processo Funrebom",
+        min: 1,
+        max: 100,
+        digits: 2
       },
       sodc4pelbm: {
         nome: "SODC 4PelBM",
@@ -522,14 +522,13 @@
 
     function initSelects() {
       tipoEl.innerHTML = "";
-      Object.entries(TIPOS)
-        .sort((a, b) => a[1].nome.localeCompare(b[1].nome, "pt-BR"))
-        .forEach(([key, item]) => {
-          const option = document.createElement("option");
-          option.value = key;
-          option.textContent = item.nome;
-          tipoEl.appendChild(option);
-        });
+
+      Object.entries(TIPOS).forEach(([key, item]) => {
+        const option = document.createElement("option");
+        option.value = key;
+        option.textContent = item.nome;
+        tipoEl.appendChild(option);
+      });
     }
 
     function getUsadosDoTipo(tipo) {
