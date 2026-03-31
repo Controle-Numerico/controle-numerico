@@ -38,7 +38,7 @@
 
     .top {
       display: grid;
-      grid-template-columns: 1fr 1fr auto auto;
+      grid-template-columns: 1fr auto auto;
       gap: 10px;
       margin-bottom: 14px;
     }
@@ -325,15 +325,13 @@
 
     <div class="top">
       <select id="tipo"></select>
-      <input type="number" id="numeroManual" placeholder="Digite o próximo número" min="1" />
-      <button class="btn-primary" onclick="marcarNumeroManual()">Marcar</button>
       <button class="btn-green" onclick="marcarProximo()">Marcar Próximo</button>
+      <button class="btn-gray" onclick="salvar()">Salvar</button>
     </div>
 
     <div class="top">
-      <button class="btn-gray" onclick="salvar()">Salvar</button>
-      <button class="btn-gray" onclick="localizarNumero()">Localizar Número</button>
       <input type="number" id="buscarNumero" placeholder="Buscar número" min="1" />
+      <button class="btn-gray" onclick="localizarNumero()">Localizar Número</button>
       <div></div>
     </div>
 
@@ -454,7 +452,6 @@
     };
 
     const tipoEl = document.getElementById("tipo");
-    const numeroManualEl = document.getElementById("numeroManual");
     const buscarNumeroEl = document.getElementById("buscarNumero");
     const infoEl = document.getElementById("info");
     const gridEl = document.getElementById("grid");
@@ -555,10 +552,7 @@
       const config = TIPOS[tipo];
 
       if (numeroJaUsado(tipo, numero)) {
-        return {
-          ok: false,
-          msg: "Esse número já foi usado anteriormente e não pode repetir."
-        };
+        return { ok: false, msg: "Esse número já foi usado anteriormente e não pode repetir." };
       }
 
       if (numero < config.min || numero > config.max) {
@@ -592,11 +586,8 @@
       const usados = getUsadosDoTipo(tipo);
       const ultimo = getUltimoUsado(tipo);
 
-      numeroManualEl.min = config.min;
-      numeroManualEl.max = config.max;
       buscarNumeroEl.min = config.min;
       buscarNumeroEl.max = config.max;
-      numeroManualEl.placeholder = `Digite de ${pad(config.min, config.digits)} até ${pad(config.max, config.digits)}`;
       buscarNumeroEl.placeholder = `Buscar de ${pad(config.min, config.digits)} até ${pad(config.max, config.digits)}`;
 
       infoEl.innerHTML = `
@@ -643,7 +634,6 @@
 
           if (temObs) {
             div.classList.add("has-note");
-
             const note = document.createElement("span");
             note.className = "note-indicator";
             note.textContent = "📝";
@@ -693,31 +683,6 @@
         span.textContent = `${config.prefixo} ${pad(num, config.digits)} • ${formatarDataBR(registro.criadoEm)}${temObs ? " • 📝" : ""}`;
         usedTagsEl.appendChild(span);
       });
-    }
-
-    function marcarNumeroManual() {
-      const tipo = tipoEl.value;
-      const config = TIPOS[tipo];
-      const numero = Number(numeroManualEl.value);
-
-      if (!numero) {
-        alert("Digite um número válido.");
-        return;
-      }
-
-      if (numero < config.min || numero > config.max) {
-        alert(`Digite um número entre ${pad(config.min, config.digits)} e ${pad(config.max, config.digits)}.`);
-        return;
-      }
-
-      const proximo = getProximoDisponivel(tipo);
-      if (numero !== proximo) {
-        alert(`A sequência é obrigatória. O próximo número é ${pad(proximo, config.digits)}.`);
-        return;
-      }
-
-      modalAtual = { tipo, numero, modo: "novo" };
-      abrirModalNovoNumero(tipo, numero);
     }
 
     function marcarProximo() {
@@ -806,7 +771,6 @@
       await salvar();
       renderGrid();
       fecharModal();
-      numeroManualEl.value = "";
       setStatus(`Número ${pad(numero, TIPOS[tipo].digits)} registrado com observação bloqueada.`);
     }
 
