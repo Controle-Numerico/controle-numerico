@@ -65,7 +65,7 @@
       min-height: 120px;
     }
 
-    textarea[readonly], textarea:disabled {
+    textarea[readonly], textarea:disabled, input[readonly], input:disabled {
       background: #f4f7fa;
       color: #45576a;
       cursor: not-allowed;
@@ -168,8 +168,8 @@
       left: 50%;
       bottom: calc(100% + 10px);
       transform: translateX(-50%);
-      min-width: 230px;
-      max-width: 320px;
+      min-width: 250px;
+      max-width: 340px;
       background: #0f172a;
       color: #fff;
       border-radius: 12px;
@@ -209,12 +209,14 @@
       color: #bfdbfe;
     }
 
-    .note-bubble .line2 {
+    .note-bubble .line2,
+    .note-bubble .line3,
+    .note-bubble .line4 {
       margin-bottom: 4px;
       color: #e5e7eb;
     }
 
-    .note-bubble .line3 {
+    .note-bubble .line5 {
       color: #ffffff;
       word-break: break-word;
     }
@@ -277,7 +279,7 @@
     .modal {
       background: #fff;
       width: 100%;
-      max-width: 620px;
+      max-width: 680px;
       border-radius: 18px;
       box-shadow: 0 18px 45px rgba(0,0,0,0.16);
       padding: 20px;
@@ -308,6 +310,58 @@
       padding: 12px;
       margin-bottom: 12px;
       line-height: 1.5;
+    }
+
+    .registro-box {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .label-soft {
+      font-size: 13px;
+      color: #607284;
+      margin-bottom: 6px;
+      display: block;
+      font-weight: bold;
+    }
+
+    .confirmacao-funcional {
+      border: 1px solid #dbe7f1;
+      background: #f8fbff;
+      border-radius: 12px;
+      padding: 12px;
+      min-height: 58px;
+      display: flex;
+      align-items: center;
+      color: #4a6279;
+      transition: all 0.2s ease;
+    }
+
+    .confirmacao-funcional.ok {
+      background: #edf9f0;
+      border-color: #bde0c4;
+      color: #166534;
+    }
+
+    .confirmacao-funcional.erro {
+      background: #fff5f5;
+      border-color: #fecaca;
+      color: #b91c1c;
+    }
+
+    .confirmacao-titulo {
+      font-weight: bold;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .observacao-hint {
+      font-size: 12px;
+      color: #64748b;
+      margin-top: 6px;
+      margin-bottom: 8px;
     }
 
     @media (max-width: 980px) {
@@ -369,7 +423,29 @@
 
       <div class="mini-info" id="modalInfo"></div>
 
+      <div class="registro-box" id="blocoRegistro">
+        <div>
+          <label class="label-soft" for="idFuncional">🔐 Identificação para registro</label>
+          <input
+            type="text"
+            id="idFuncional"
+            inputmode="numeric"
+            autocomplete="off"
+            placeholder="Digite somente o ID Func."
+            maxlength="7"
+          />
+        </div>
+
+        <div class="confirmacao-funcional" id="confirmacaoFuncional">
+          <div>Digite o ID funcional para validar o responsável pelo registro.</div>
+        </div>
+      </div>
+
+      <label class="label-soft" for="observacaoTexto">📝 Observação do uso</label>
       <textarea id="observacaoTexto" placeholder="Escreva aqui..: Qual seu Nome? Para onde tu mandou essa Mensagem? Você Consegue!"></textarea>
+      <div class="observacao-hint" id="textoAutoRegistro">
+        Ao salvar, o sistema gravará automaticamente o nome e o ID funcional validados.
+      </div>
 
       <div class="modal-actions">
         <button class="btn-primary" id="btnSalvarObservacao" onclick="salvarObservacao()">Salvar observação</button>
@@ -382,6 +458,27 @@
     const BIN_ID = "69cbc58536566621a8669c2e";
     const API_KEY = "$2a$10$zZG0IbSsjFx8uhKbysI2MurESZSHmb/kQxS6GJqggDJDjA2FFUeTu";
     const URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+
+    const FUNCIONARIOS = {
+      "2614960": "ALESSANDRO BASTOS VICENTE",
+      "2882930": "ANDERSON SILVA DA SILVA",
+      "4626338": "CAIQUE MOTTA",
+      "2972719": "EDI DIEFERSON RIBEIRO DE VARGAS",
+      "3698696": "GABRIEL VELEDA CAMACHO",
+      "2692449": "JULIANO INSAURRIAGA BATISTA",
+      "4490380": "LARSSON FROMMING FREDES",
+      "3218627": "MAGNO NORNBERG TOMASCHEWSKI",
+      "2423286": "MARCELO BANDEIRA TAVARES",
+      "3697665": "MARLON ISQUIERDO AZEVEDO",
+      "3084620": "MAX STEVENS OLIVEIRA NUNES",
+      "3698530": "RAFAEL LISCANO",
+      "3698440": "SAYMON CARLOS ARAUJO BORGES",
+      "4625595": "THIAGO CHAGAS SOARES",
+      "4783069": "VANDERLEI JESKE PEGLOW",
+      "3702847": "VINICIUS INSAURRIAGA BATISTA",
+      "2910233": "VINICIUS MACHADO DE MORAES",
+      "4355504": "WILLIAM RIBEIRO MEDEIROS"
+    };
 
     const TIPOS = {
       mensagensExpressas: {
@@ -479,6 +576,10 @@
     const modalInfo = document.getElementById("modalInfo");
     const observacaoTexto = document.getElementById("observacaoTexto");
     const btnSalvarObservacao = document.getElementById("btnSalvarObservacao");
+    const idFuncionalEl = document.getElementById("idFuncional");
+    const confirmacaoFuncionalEl = document.getElementById("confirmacaoFuncional");
+    const blocoRegistroEl = document.getElementById("blocoRegistro");
+    const textoAutoRegistroEl = document.getElementById("textoAutoRegistro");
 
     function pad(num, digits) {
       return String(num).padStart(digits, "0");
@@ -504,6 +605,13 @@
       return d.toLocaleDateString("pt-BR");
     }
 
+    function formatarDataHoraBR(dataIso) {
+      if (!dataIso) return "Data não registrada";
+      const d = new Date(dataIso);
+      if (isNaN(d.getTime())) return dataIso;
+      return d.toLocaleString("pt-BR");
+    }
+
     function ensureStructure() {
       if (!db.ano2026 || typeof db.ano2026 !== "object") {
         db.ano2026 = {};
@@ -517,6 +625,39 @@
         if (!db.ano2026[tipo].usados || typeof db.ano2026[tipo].usados !== "object") {
           db.ano2026[tipo].usados = {};
         }
+      });
+    }
+
+    function migrarRegistrosAntigos() {
+      ensureStructure();
+
+      Object.keys(TIPOS).forEach(tipo => {
+        const usados = db.ano2026[tipo].usados || {};
+
+        Object.keys(usados).forEach(numero => {
+          const registro = usados[numero];
+
+          if (!registro || typeof registro !== "object") {
+            usados[numero] = {
+              observacao: "",
+              criadoEm: new Date().toISOString(),
+              observacaoTravada: true
+            };
+            return;
+          }
+
+          if (typeof registro.observacao === "undefined") {
+            registro.observacao = "";
+          }
+
+          if (typeof registro.criadoEm === "undefined") {
+            registro.criadoEm = new Date().toISOString();
+          }
+
+          if (typeof registro.observacaoTravada === "undefined") {
+            registro.observacaoTravada = true;
+          }
+        });
       });
     }
 
@@ -561,7 +702,49 @@
       return usados.length ? usados[usados.length - 1] : null;
     }
 
-    function registrarNumero(tipo, numero, observacao = "") {
+    function validarIdFuncional(id) {
+      const limpo = String(id || "").replace(/\D/g, "");
+      const nome = FUNCIONARIOS[limpo] || null;
+      return {
+        ok: !!nome,
+        idFunc: limpo,
+        nome
+      };
+    }
+
+    function atualizarConfirmacaoFuncional() {
+      const validacao = validarIdFuncional(idFuncionalEl.value);
+
+      confirmacaoFuncionalEl.classList.remove("ok", "erro");
+
+      if (!validacao.idFunc) {
+        confirmacaoFuncionalEl.innerHTML = `<div>Digite o ID funcional para validar o responsável pelo registro.</div>`;
+        return validacao;
+      }
+
+      if (validacao.ok) {
+        confirmacaoFuncionalEl.classList.add("ok");
+        confirmacaoFuncionalEl.innerHTML = `
+          <div>
+            <span class="confirmacao-titulo">✅ Confirmação encontrada</span>
+            ${escapeHtml(validacao.nome)}<br>
+            ID Func.: ${escapeHtml(validacao.idFunc)}
+          </div>
+        `;
+      } else {
+        confirmacaoFuncionalEl.classList.add("erro");
+        confirmacaoFuncionalEl.innerHTML = `
+          <div>
+            <span class="confirmacao-titulo">⚠️ ID não localizado</span>
+            Verifique o número digitado para continuar o registro.
+          </div>
+        `;
+      }
+
+      return validacao;
+    }
+
+    function registrarNumero(tipo, numero, observacao = "", responsavel = null) {
       ensureStructure();
       const config = TIPOS[tipo];
 
@@ -584,10 +767,21 @@
         };
       }
 
+      if (!responsavel || !responsavel.idFunc || !responsavel.nome) {
+        return {
+          ok: false,
+          msg: "É necessário validar um ID funcional cadastrado para registrar o uso da numeração."
+        };
+      }
+
       db.ano2026[tipo].usados[String(numero)] = {
         observacao: observacao || "",
         criadoEm: new Date().toISOString(),
-        observacaoTravada: true
+        observacaoTravada: true,
+        registradoPor: {
+          idFunc: responsavel.idFunc,
+          nome: responsavel.nome
+        }
       };
 
       return { ok: true };
@@ -618,11 +812,16 @@
         ? registro.observacao.trim()
         : "Sem observação cadastrada.";
 
+      const nome = registro.registradoPor?.nome || "Não informado";
+      const idFunc = registro.registradoPor?.idFunc || "-";
+
       return `
         <div class="note-bubble">
           <div class="line1">${escapeHtml(config.prefixo)} ${pad(numero, config.digits)}</div>
-          <div class="line2">Registrado em ${escapeHtml(formatarDataBR(registro.criadoEm))}</div>
-          <div class="line3">${escapeHtml(obs)}</div>
+          <div class="line2">Registrado em ${escapeHtml(formatarDataHoraBR(registro.criadoEm))}</div>
+          <div class="line3">Responsável: ${escapeHtml(nome)}</div>
+          <div class="line4">ID Func.: ${escapeHtml(idFunc)}</div>
+          <div class="line5">${escapeHtml(obs)}</div>
         </div>
       `;
     }
@@ -692,9 +891,12 @@
       usados.forEach(num => {
         const registro = getRegistro(tipo, num);
         const temObs = registro && registro.observacao && registro.observacao.trim();
+        const nomeCurto = registro?.registradoPor?.nome
+          ? registro.registradoPor.nome.split(" ").slice(0, 2).join(" ")
+          : "";
         const span = document.createElement("span");
         span.className = "tag";
-        span.textContent = `${config.prefixo} ${pad(num, config.digits)} • ${formatarDataBR(registro.criadoEm)}${temObs ? " • 📝" : ""}`;
+        span.textContent = `${config.prefixo} ${pad(num, config.digits)} • ${formatarDataBR(registro.criadoEm)}${nomeCurto ? " • " + nomeCurto : ""}${temObs ? " • 📝" : ""}`;
         usedTagsEl.appendChild(span);
       });
     }
@@ -728,10 +930,20 @@
       observacaoTexto.value = "";
       observacaoTexto.disabled = false;
       observacaoTexto.readOnly = false;
+
+      idFuncionalEl.value = "";
+      idFuncionalEl.disabled = false;
+      idFuncionalEl.readOnly = false;
+
+      blocoRegistroEl.style.display = "grid";
+      textoAutoRegistroEl.style.display = "block";
+
       btnSalvarObservacao.style.display = "block";
       btnSalvarObservacao.textContent = "Salvar observação";
+
+      atualizarConfirmacaoFuncional();
       modalOverlay.classList.add("show");
-      observacaoTexto.focus();
+      idFuncionalEl.focus();
     }
 
     function abrirModalObservacao(tipo, numero) {
@@ -742,14 +954,29 @@
 
       modalTitulo.textContent = `Observação de ${config.prefixo} ${pad(numero, config.digits)}`;
       modalTextoApoio.textContent = "Observação já salva e bloqueada para edição.";
+
+      const nome = registro?.registradoPor?.nome || "Não informado";
+      const idFunc = registro?.registradoPor?.idFunc || "-";
+
       modalInfo.innerHTML = `
         <b>Documento:</b> ${config.nome}<br>
         <b>Número:</b> ${pad(numero, config.digits)}<br>
-        <b>Data registrada:</b> ${formatarDataBR(registro.criadoEm)}
+        <b>Data registrada:</b> ${formatarDataHoraBR(registro.criadoEm)}<br>
+        <b>Responsável:</b> ${escapeHtml(nome)}<br>
+        <b>ID Func.:</b> ${escapeHtml(idFunc)}
       `;
+
       observacaoTexto.value = registro.observacao || "Sem observação cadastrada.";
       observacaoTexto.disabled = true;
       observacaoTexto.readOnly = true;
+
+      idFuncionalEl.value = idFunc;
+      idFuncionalEl.disabled = true;
+      idFuncionalEl.readOnly = true;
+
+      blocoRegistroEl.style.display = "none";
+      textoAutoRegistroEl.style.display = "none";
+
       btnSalvarObservacao.style.display = "none";
       modalOverlay.classList.add("show");
     }
@@ -774,8 +1001,18 @@
         return;
       }
 
+      const validacao = atualizarConfirmacaoFuncional();
+      if (!validacao.ok) {
+        alert("Informe um ID Funcional válido e pré-cadastrado para efetuar o registro.");
+        idFuncionalEl.focus();
+        return;
+      }
+
       const obs = observacaoTexto.value.trim();
-      const resultado = registrarNumero(tipo, numero, obs);
+      const resultado = registrarNumero(tipo, numero, obs, {
+        idFunc: validacao.idFunc,
+        nome: validacao.nome
+      });
 
       if (!resultado.ok) {
         alert(resultado.msg);
@@ -852,11 +1089,17 @@
       }
 
       ensureStructure();
+      migrarRegistrosAntigos();
       renderGrid();
       setStatus("Dados carregados.");
     }
 
     tipoEl.addEventListener("change", renderGrid);
+
+    idFuncionalEl.addEventListener("input", () => {
+      idFuncionalEl.value = idFuncionalEl.value.replace(/\D/g, "").slice(0, 7);
+      atualizarConfirmacaoFuncional();
+    });
 
     modalOverlay.addEventListener("click", (e) => {
       if (e.target === modalOverlay) {
