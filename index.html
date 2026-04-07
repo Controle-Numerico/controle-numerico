@@ -104,13 +104,29 @@
       background: #dde5ec;
     }
 
-    .btn-danger {
-      background: #dc2626;
-      color: white;
+    .btn-icon-danger {
+      width: 40px;
+      min-width: 40px;
+      height: 40px;
+      padding: 0;
+      border-radius: 10px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      color: #64748b;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      line-height: 1;
+      transition: all 0.2s ease;
+      box-shadow: none;
     }
 
-    .btn-danger:hover {
-      background: #b91c1c;
+    .btn-icon-danger:hover {
+      background: #fff1f2;
+      border-color: #fecdd3;
+      color: #dc2626;
+      transform: translateY(-1px);
     }
 
     .info {
@@ -307,9 +323,10 @@
 
     .modal-actions {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-columns: 1fr auto 1fr;
       gap: 10px;
       margin-top: 12px;
+      align-items: center;
     }
 
     .mini-info {
@@ -386,6 +403,12 @@
         grid-template-columns: 1fr;
       }
 
+      .btn-icon-danger {
+        width: 100%;
+        height: 42px;
+        justify-content: center;
+      }
+
       .note-bubble {
         display: none;
       }
@@ -458,7 +481,7 @@
 
       <div class="modal-actions">
         <button class="btn-primary" id="btnSalvarObservacao" onclick="salvarObservacao()">Salvar observação</button>
-        <button class="btn-danger" id="btnApagarRegistro" onclick="apagarRegistroAtual()" style="display:none;">Apagar registro</button>
+        <button class="btn-icon-danger" id="btnApagarRegistro" onclick="apagarRegistroAtual()" style="display:none;" title="Apagar registro" aria-label="Apagar registro">🗑️</button>
         <button class="btn-gray" onclick="fecharModal()">Fechar</button>
       </div>
     </div>
@@ -468,7 +491,7 @@
     const BIN_ID = "69cbc58536566621a8669c2e";
     const API_KEY = "$2a$10$zZG0IbSsjFx8uhKbysI2MurESZSHmb/kQxS6GJqggDJDjA2FFUeTu";
     const URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
-    const ADMIN_PASSWORD = "123456";
+    const ADMIN_PASSWORD = "1234";
 
     const FUNCIONARIOS = {
       "2614960": "ALESSANDRO BASTOS VICENTE",
@@ -991,7 +1014,7 @@
       textoAutoRegistroEl.style.display = "none";
 
       btnSalvarObservacao.style.display = "none";
-      btnApagarRegistro.style.display = "block";
+      btnApagarRegistro.style.display = "inline-flex";
 
       modalOverlay.classList.add("show");
     }
