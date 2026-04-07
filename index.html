@@ -104,6 +104,15 @@
       background: #dde5ec;
     }
 
+    .btn-danger {
+      background: #dc2626;
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: #b91c1c;
+    }
+
     .info {
       background: #eef3f8;
       border-radius: 14px;
@@ -298,7 +307,7 @@
 
     .modal-actions {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr 1fr 1fr;
       gap: 10px;
       margin-top: 12px;
     }
@@ -449,6 +458,7 @@
 
       <div class="modal-actions">
         <button class="btn-primary" id="btnSalvarObservacao" onclick="salvarObservacao()">Salvar observação</button>
+        <button class="btn-danger" id="btnApagarRegistro" onclick="apagarRegistroAtual()" style="display:none;">Apagar registro</button>
         <button class="btn-gray" onclick="fecharModal()">Fechar</button>
       </div>
     </div>
@@ -458,6 +468,7 @@
     const BIN_ID = "69cbc58536566621a8669c2e";
     const API_KEY = "$2a$10$zZG0IbSsjFx8uhKbysI2MurESZSHmb/kQxS6GJqggDJDjA2FFUeTu";
     const URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+    const ADMIN_PASSWORD = "123456";
 
     const FUNCIONARIOS = {
       "2614960": "ALESSANDRO BASTOS VICENTE",
@@ -576,6 +587,7 @@
     const modalInfo = document.getElementById("modalInfo");
     const observacaoTexto = document.getElementById("observacaoTexto");
     const btnSalvarObservacao = document.getElementById("btnSalvarObservacao");
+    const btnApagarRegistro = document.getElementById("btnApagarRegistro");
     const idFuncionalEl = document.getElementById("idFuncional");
     const confirmacaoFuncionalEl = document.getElementById("confirmacaoFuncional");
     const blocoRegistroEl = document.getElementById("blocoRegistro");
@@ -940,6 +952,7 @@
 
       btnSalvarObservacao.style.display = "block";
       btnSalvarObservacao.textContent = "Salvar observação";
+      btnApagarRegistro.style.display = "none";
 
       atualizarConfirmacaoFuncional();
       modalOverlay.classList.add("show");
@@ -978,6 +991,8 @@
       textoAutoRegistroEl.style.display = "none";
 
       btnSalvarObservacao.style.display = "none";
+      btnApagarRegistro.style.display = "block";
+
       modalOverlay.classList.add("show");
     }
 
@@ -1023,6 +1038,41 @@
       renderGrid();
       fecharModal();
       setStatus(`Número ${pad(numero, TIPOS[tipo].digits)} registrado com observação bloqueada.`);
+    }
+
+    async function apagarRegistroAtual() {
+      const { tipo, numero, modo } = modalAtual;
+      if (!tipo || !numero || modo !== "visualizar") return;
+
+      const config = TIPOS[tipo];
+      const registro = getRegistro(tipo, numero);
+
+      if (!registro) {
+        alert("Registro não encontrado.");
+        return;
+      }
+
+      const senha = prompt("Digite a senha de admin para apagar este registro:");
+      if (senha === null) return;
+
+      if (senha !== ADMIN_PASSWORD) {
+        alert("Senha de admin incorreta.");
+        return;
+      }
+
+      const nome = registro?.registradoPor?.nome || "Não informado";
+      const confirmar = confirm(
+        `Confirma apagar ${config.prefixo} ${pad(numero, config.digits)}?\n\nResponsável: ${nome}\n\nEssa ação remove o registro da numeração.`
+      );
+
+      if (!confirmar) return;
+
+      delete db.ano2026[tipo].usados[String(numero)];
+
+      await salvar();
+      fecharModal();
+      renderGrid();
+      setStatus(`${config.prefixo} ${pad(numero, config.digits)} apagado com sucesso.`);
     }
 
     function localizarNumero() {
