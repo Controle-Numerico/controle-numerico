@@ -1,220 +1,871 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Controle Numérico 2026</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Controle Numérico 2026</title>
 
-<style>
-* { box-sizing: border-box; font-family: Arial; }
+  <style>
+    * { box-sizing: border-box; font-family: Arial, Helvetica, sans-serif; }
 
-body { margin:0; background:#eef3f8; }
-
-.container {
-  max-width:1200px;
-  margin:20px auto;
-  background:#fff;
-  padding:20px;
-  border-radius:16px;
-}
-
-.titulo { text-align:center; font-size:28px; color:#0f4c81; }
-.subtitle { text-align:center; margin-bottom:15px; }
-
-.top { display:flex; gap:10px; margin-bottom:10px; }
-
-button {
-  padding:10px;
-  border:none;
-  border-radius:8px;
-  cursor:pointer;
-}
-
-.btn-green { background:#1ea446; color:#fff; }
-.btn-gray { background:#ddd; }
-
-.number-grid {
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(60px,1fr));
-  gap:6px;
-}
-
-.num {
-  padding:12px;
-  text-align:center;
-  border-radius:8px;
-  border:1px solid #ccc;
-  cursor:pointer;
-}
-
-.num.used { background:#0f4c81; color:#fff; }
-.num.next { background:#c8f7d2; }
-
-.modal-overlay {
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.4);
-  display:none;
-  justify-content:center;
-  align-items:center;
-}
-
-.modal {
-  background:#fff;
-  padding:20px;
-  border-radius:12px;
-  width:90%;
-  max-width:500px;
-}
-
-.confirmacao {
-  padding:10px;
-  border-radius:8px;
-  margin-top:8px;
-  font-size:14px;
-}
-
-.ok { background:#e6f9ec; color:#166534; }
-.erro { background:#fdecec; color:#991b1b; }
-
-</style>
-</head>
-
-<body>
-
-<div class="container">
-  <div class="titulo">📋 Controle Numérico</div>
-  <div class="subtitle">Visual livre • Registro com ID Funcional</div>
-
-  <div class="top">
-    <button class="btn-green" onclick="abrirRegistro()">Marcar Próximo</button>
-    <button class="btn-gray" onclick="salvar()">Salvar</button>
-  </div>
-
-  <div class="number-grid" id="grid"></div>
-</div>
-
-<div class="modal-overlay" id="modal">
-  <div class="modal">
-
-    <h3>Registrar número</h3>
-
-    <input id="idFunc" placeholder="Digite o ID Funcional" />
-    <div id="confirmacao" class="confirmacao"></div>
-
-    <textarea id="obs" placeholder="Observação"></textarea>
-
-    <br><br>
-    <button class="btn-green" onclick="confirmarRegistro()">Salvar</button>
-    <button class="btn-gray" onclick="fechar()">Cancelar</button>
-
-  </div>
-</div>
-
-<script>
-
-const FUNCIONARIOS = {
-"2614960":"ALESSANDRO BASTOS VICENTE",
-"2882930":"ANDERSON SILVA DA SILVA",
-"4626338":"CAIQUE MOTTA",
-"2972719":"EDI DIEFERSON RIBEIRO DE VARGAS",
-"3698696":"GABRIEL VELEDA CAMACHO",
-"2692449":"JULIANO INSAURRIAGA BATISTA",
-"4490380":"LARSSON FROMMING FREDES",
-"3218627":"MAGNO NORNBERG TOMASCHEWSKI",
-"2423286":"MARCELO BANDEIRA TAVARES",
-"3697665":"MARLON ISQUIERDO AZEVEDO",
-"3084620":"MAX STEVENS OLIVEIRA NUNES",
-"3698530":"RAFAEL LISCANO",
-"3698440":"SAYMON CARLOS ARAUJO BORGES",
-"4625595":"THIAGO CHAGAS SOARES",
-"4783069":"VANDERLEI JESKE PEGLOW",
-"3702847":"VINICIUS INSAURRIAGA BATISTA",
-"2910233":"VINICIUS MACHADO DE MORAES",
-"4355504":"WILLIAM RIBEIRO MEDEIROS"
-};
-
-let dados = [];
-let numeroAtual = 1;
-
-function render(){
-  const grid = document.getElementById("grid");
-  grid.innerHTML = "";
-
-  for(let i=1;i<=100;i++){
-    let div = document.createElement("div");
-    div.className="num";
-
-    let usado = dados.find(x=>x.numero===i);
-
-    if(usado){
-      div.classList.add("used");
-      div.innerText=i;
-      div.title = usado.nome + " ("+usado.id+")";
-    }else if(i===numeroAtual){
-      div.classList.add("next");
-      div.innerText=i;
-    }else{
-      div.innerText=i;
+    body {
+      margin: 0;
+      background: #eef3f8;
+      color: #1f2937;
     }
 
-    grid.appendChild(div);
-  }
-}
+    .container {
+      max-width: 1350px;
+      margin: 20px auto;
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 12px 35px rgba(0,0,0,0.08);
+      padding: 22px;
+    }
 
-function abrirRegistro(){
-  document.getElementById("modal").style.display="flex";
-}
+    .org {
+      text-align: center;
+      color: #dc2626;
+      font-size: 22px;
+      margin: 0;
+      font-weight: bold;
+    }
 
-function fechar(){
-  document.getElementById("modal").style.display="none";
-}
+    .titulo {
+      text-align: center;
+      color: #0f4c81;
+      font-size: 36px;
+      margin: 5px 0 10px;
+    }
 
-document.getElementById("idFunc").addEventListener("input", function(){
-  let id = this.value.replace(/\D/g,"");
-  this.value = id;
+    .subtitle {
+      text-align: center;
+      color: #607284;
+      margin-bottom: 20px;
+      font-size: 15px;
+    }
 
-  let box = document.getElementById("confirmacao");
+    .top {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
 
-  if(FUNCIONARIOS[id]){
-    box.className="confirmacao ok";
-    box.innerText = "✔ " + FUNCIONARIOS[id];
-  }else{
-    box.className="confirmacao erro";
-    box.innerText = "ID não encontrado";
-  }
-});
+    input, select, button, textarea {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #c9d4df;
+      font-size: 16px;
+    }
 
-function confirmarRegistro(){
-  let id = document.getElementById("idFunc").value;
-  let nome = FUNCIONARIOS[id];
-  let obs = document.getElementById("obs").value;
+    textarea {
+      resize: vertical;
+      min-height: 120px;
+    }
 
-  if(!nome){
-    alert("ID inválido");
-    return;
-  }
+    textarea[readonly], textarea:disabled {
+      background: #f4f7fa;
+      color: #45576a;
+      cursor: not-allowed;
+    }
 
-  dados.push({
-    numero: numeroAtual,
-    id: id,
-    nome: nome,
-    obs: obs
-  });
+    button {
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+    }
 
-  numeroAtual++;
+    .btn-primary {
+      background: #0f4c81;
+      color: white;
+    }
 
-  fechar();
-  render();
-}
+    .btn-primary:hover {
+      background: #0c3d68;
+    }
 
-function salvar(){
-  alert("Simulação de salvar OK");
-}
+    .btn-green {
+      background: #1ea446;
+      color: white;
+    }
 
-render();
+    .btn-green:hover {
+      background: #18853a;
+    }
 
-</script>
+    .btn-gray {
+      background: #eceff3;
+      color: #222;
+    }
 
+    .btn-gray:hover {
+      background: #dde5ec;
+    }
+
+    .info {
+      background: #eef3f8;
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 18px;
+      line-height: 1.5;
+      font-size: 16px;
+    }
+
+    .number-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(62px, 1fr));
+      gap: 8px;
+    }
+
+    .num {
+      position: relative;
+      background: #fff;
+      border: 1px solid #cfd7df;
+      border-radius: 10px;
+      padding: 12px 6px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 14px;
+      cursor: pointer;
+      user-select: none;
+      transition: 0.15s;
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: visible;
+    }
+
+    .num:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+
+    .num.used {
+      background: #0f4c81;
+      color: #fff;
+    }
+
+    .num.next {
+      outline: 3px solid rgba(34,197,94,0.28);
+      border-color: #1ea446;
+      background: #ecfdf3;
+      color: #15361f;
+    }
+
+    .note-indicator {
+      position: absolute;
+      right: 4px;
+      top: 2px;
+      font-size: 12px;
+      z-index: 2;
+    }
+
+    .note-bubble {
+      position: absolute;
+      left: 50%;
+      bottom: calc(100% + 10px);
+      transform: translateX(-50%);
+      min-width: 230px;
+      max-width: 320px;
+      background: #0f172a;
+      color: #fff;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 12px;
+      line-height: 1.45;
+      text-align: left;
+      box-shadow: 0 10px 26px rgba(0,0,0,0.22);
+      opacity: 0;
+      pointer-events: none;
+      visibility: hidden;
+      transition: opacity 0.15s ease;
+      z-index: 50;
+      white-space: normal;
+    }
+
+    .note-bubble::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border-width: 7px;
+      border-style: solid;
+      border-color: #0f172a transparent transparent transparent;
+    }
+
+    .num.has-note:hover .note-bubble,
+    .num.used:hover .note-bubble {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .note-bubble .line1 {
+      font-weight: bold;
+      margin-bottom: 4px;
+      color: #bfdbfe;
+    }
+
+    .note-bubble .line2 {
+      margin-bottom: 4px;
+      color: #e5e7eb;
+    }
+
+    .note-bubble .line3 {
+      color: #ffffff;
+      word-break: break-word;
+    }
+
+    .alert {
+      margin-top: 14px;
+      background: #f8fbff;
+      border: 1px solid #d8e5f1;
+      border-radius: 12px;
+      padding: 12px 14px;
+      color: #35516c;
+      font-size: 14px;
+    }
+
+    .used-list {
+      margin-top: 18px;
+      padding: 14px;
+      background: #f8fbff;
+      border: 1px solid #dbe7f1;
+      border-radius: 14px;
+    }
+
+    .used-list h3 {
+      margin: 0 0 10px;
+      color: #0f4c81;
+      font-size: 18px;
+    }
+
+    .used-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tag {
+      background: #e8f1f8;
+      color: #0f4c81;
+      border: 1px solid #cddceb;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 13px;
+      font-weight: bold;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 1000;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal {
+      background: #fff;
+      width: 100%;
+      max-width: 620px;
+      border-radius: 18px;
+      box-shadow: 0 18px 45px rgba(0,0,0,0.16);
+      padding: 20px;
+    }
+
+    .modal h2 {
+      margin: 0 0 8px;
+      color: #0f4c81;
+      font-size: 24px;
+    }
+
+    .modal p {
+      margin: 0 0 14px;
+      color: #52667b;
+    }
+
+    .modal-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .mini-info {
+      background: #f5f9fd;
+      border: 1px solid #dae6f2;
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 12px;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 980px) {
+      .top {
+        grid-template-columns: 1fr;
+      }
+
+      .titulo {
+        font-size: 32px;
+      }
+
+      .modal-actions {
+        grid-template-columns: 1fr;
+      }
+
+      .note-bubble {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 class="org">🚒 CB São Lourenço do Sul</h1>
+    <h2 class="titulo">📋 Controle Numérico</h2>
+
+    <div class="subtitle">
+      Controle de Numeração Sequencial 2026 • Mensagens Enviadas • Observação bloqueada após salvar
+    </div>
+
+    <div class="top">
+      <select id="tipo"></select>
+      <button class="btn-green" onclick="marcarProximo()">Marcar Próximo</button>
+      <button class="btn-gray" onclick="salvar()">Salvar</button>
+    </div>
+
+    <div class="top">
+      <input type="number" id="buscarNumero" placeholder="Buscar número" min="1" />
+      <button class="btn-gray" onclick="localizarNumero()">Localizar Número</button>
+      <div></div>
+    </div>
+
+    <div class="info" id="info"></div>
+
+    <div class="number-grid" id="grid"></div>
+
+    <div class="used-list">
+      <h3>Números já usados em 2026</h3>
+      <div class="used-tags" id="usedTags"></div>
+    </div>
+
+    <div class="alert" id="status">Sistema pronto.</div>
+  </div>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <h2 id="modalTitulo">Observação do número</h2>
+      <p id="modalTextoApoio">Registre onde esse número foi utilizado.</p>
+
+      <div class="mini-info" id="modalInfo"></div>
+
+      <textarea id="observacaoTexto" placeholder="Escreva aqui..: Qual seu Nome? Para onde tu mandou essa Mensagem? Você Consegue!"></textarea>
+
+      <div class="modal-actions">
+        <button class="btn-primary" id="btnSalvarObservacao" onclick="salvarObservacao()">Salvar observação</button>
+        <button class="btn-gray" onclick="fecharModal()">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const BIN_ID = "69cbc58536566621a8669c2e";
+    const API_KEY = "$2a$10$zZG0IbSsjFx8uhKbysI2MurESZSHmb/kQxS6GJqggDJDjA2FFUeTu";
+    const URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+
+    const TIPOS = {
+      mensagensExpressas: {
+        nome: "Mensagens Expressas",
+        prefixo: "Mensagem Expressa",
+        min: 202,
+        max: 1000,
+        digits: 3
+      },
+      notaBI: {
+        nome: "Nota para BI",
+        prefixo: "Nota para BI",
+        min: 14,
+        max: 500,
+        digits: 3
+      },
+      partes: {
+        nome: "Partes",
+        prefixo: "Parte",
+        min: 8,
+        max: 500,
+        digits: 3
+      },
+      ordensServico: {
+        nome: "Ordens de Serviço",
+        prefixo: "Ordem de Serviço",
+        min: 2,
+        max: 500,
+        digits: 3
+      },
+      oficiosExpedidos: {
+        nome: "Ofícios Expedidos",
+        prefixo: "Ofício Expedido",
+        min: 4,
+        max: 500,
+        digits: 3
+      },
+      relatorioVulto: {
+        nome: "Relatório / Comunicação de Ocorrência de Vulto",
+        prefixo: "Relatório de Vulto",
+        min: 1,
+        max: 200,
+        digits: 3
+      },
+      guiaCautelas: {
+        nome: "Guia de Cautelas",
+        prefixo: "Guia de Cautelas",
+        min: 6,
+        max: 100,
+        digits: 2
+      },
+      guiasMalote: {
+        nome: "Guias de Malote",
+        prefixo: "Guia de Malote",
+        min: 1,
+        max: 200,
+        digits: 2
+      },
+      numeroProcessoFunrebom: {
+        nome: "Número Processo Funrebom",
+        prefixo: "Processo Funrebom",
+        min: 1,
+        max: 100,
+        digits: 2
+      },
+      sodc4pelbm: {
+        nome: "SODC 4PelBM",
+        prefixo: "SODC 4PelBM",
+        min: 3,
+        max: 500,
+        digits: 3
+      }
+    };
+
+    let db = {
+      ano2026: {}
+    };
+
+    let modalAtual = {
+      tipo: null,
+      numero: null,
+      modo: "novo"
+    };
+
+    const tipoEl = document.getElementById("tipo");
+    const buscarNumeroEl = document.getElementById("buscarNumero");
+    const infoEl = document.getElementById("info");
+    const gridEl = document.getElementById("grid");
+    const usedTagsEl = document.getElementById("usedTags");
+    const statusEl = document.getElementById("status");
+
+    const modalOverlay = document.getElementById("modalOverlay");
+    const modalTitulo = document.getElementById("modalTitulo");
+    const modalTextoApoio = document.getElementById("modalTextoApoio");
+    const modalInfo = document.getElementById("modalInfo");
+    const observacaoTexto = document.getElementById("observacaoTexto");
+    const btnSalvarObservacao = document.getElementById("btnSalvarObservacao");
+
+    function pad(num, digits) {
+      return String(num).padStart(digits, "0");
+    }
+
+    function escapeHtml(text) {
+      return String(text || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function setStatus(msg) {
+      statusEl.textContent = msg;
+    }
+
+    function formatarDataBR(dataIso) {
+      if (!dataIso) return "Data não registrada";
+      const d = new Date(dataIso);
+      if (isNaN(d.getTime())) return dataIso;
+      return d.toLocaleDateString("pt-BR");
+    }
+
+    function ensureStructure() {
+      if (!db.ano2026 || typeof db.ano2026 !== "object") {
+        db.ano2026 = {};
+      }
+
+      Object.keys(TIPOS).forEach(tipo => {
+        if (!db.ano2026[tipo] || typeof db.ano2026[tipo] !== "object") {
+          db.ano2026[tipo] = { usados: {} };
+        }
+
+        if (!db.ano2026[tipo].usados || typeof db.ano2026[tipo].usados !== "object") {
+          db.ano2026[tipo].usados = {};
+        }
+      });
+    }
+
+    function initSelects() {
+      tipoEl.innerHTML = "";
+
+      Object.entries(TIPOS).forEach(([key, item]) => {
+        const option = document.createElement("option");
+        option.value = key;
+        option.textContent = item.nome;
+        tipoEl.appendChild(option);
+      });
+    }
+
+    function getUsadosDoTipo(tipo) {
+      ensureStructure();
+      const usadosObj = db.ano2026[tipo].usados;
+      return Object.keys(usadosObj)
+        .map(n => Number(n))
+        .sort((a, b) => a - b);
+    }
+
+    function getRegistro(tipo, numero) {
+      ensureStructure();
+      return db.ano2026[tipo].usados[String(numero)] || null;
+    }
+
+    function numeroJaUsado(tipo, numero) {
+      return !!getRegistro(tipo, numero);
+    }
+
+    function getProximoDisponivel(tipo) {
+      const config = TIPOS[tipo];
+      for (let i = config.min; i <= config.max; i++) {
+        if (!numeroJaUsado(tipo, i)) return i;
+      }
+      return null;
+    }
+
+    function getUltimoUsado(tipo) {
+      const usados = getUsadosDoTipo(tipo);
+      return usados.length ? usados[usados.length - 1] : null;
+    }
+
+    function registrarNumero(tipo, numero, observacao = "") {
+      ensureStructure();
+      const config = TIPOS[tipo];
+
+      if (numeroJaUsado(tipo, numero)) {
+        return { ok: false, msg: "Esse número já foi usado anteriormente e não pode repetir." };
+      }
+
+      if (numero < config.min || numero > config.max) {
+        return {
+          ok: false,
+          msg: `Esse documento aceita somente números de ${pad(config.min, config.digits)} até ${pad(config.max, config.digits)}.`
+        };
+      }
+
+      const proximo = getProximoDisponivel(tipo);
+      if (numero !== proximo) {
+        return {
+          ok: false,
+          msg: `A sequência é obrigatória. O próximo número disponível é ${pad(proximo, config.digits)}.`
+        };
+      }
+
+      db.ano2026[tipo].usados[String(numero)] = {
+        observacao: observacao || "",
+        criadoEm: new Date().toISOString(),
+        observacaoTravada: true
+      };
+
+      return { ok: true };
+    }
+
+    function atualizarInfo() {
+      const tipo = tipoEl.value;
+      const config = TIPOS[tipo];
+      const proximo = getProximoDisponivel(tipo);
+      const usados = getUsadosDoTipo(tipo);
+      const ultimo = getUltimoUsado(tipo);
+
+      buscarNumeroEl.min = config.min;
+      buscarNumeroEl.max = config.max;
+      buscarNumeroEl.placeholder = `Buscar de ${pad(config.min, config.digits)} até ${pad(config.max, config.digits)}`;
+
+      infoEl.innerHTML = `
+        <b>Documento:</b> ${config.nome}<br>
+        <b>Faixa disponível:</b> ${pad(config.min, config.digits)} até ${pad(config.max, config.digits)}<br>
+        <b>Próximo número obrigatório:</b> ${proximo ? pad(proximo, config.digits) : "Fim"}<br>
+        <b>Último usado em 2026:</b> ${ultimo ? pad(ultimo, config.digits) : "---"}<br>
+        <b>Total usados em 2026:</b> ${usados.length}
+      `;
+    }
+
+    function criarBalaoObservacao(registro, config, numero) {
+      const obs = registro.observacao && registro.observacao.trim()
+        ? registro.observacao.trim()
+        : "Sem observação cadastrada.";
+
+      return `
+        <div class="note-bubble">
+          <div class="line1">${escapeHtml(config.prefixo)} ${pad(numero, config.digits)}</div>
+          <div class="line2">Registrado em ${escapeHtml(formatarDataBR(registro.criadoEm))}</div>
+          <div class="line3">${escapeHtml(obs)}</div>
+        </div>
+      `;
+    }
+
+    function renderGrid() {
+      const tipo = tipoEl.value;
+      const config = TIPOS[tipo];
+      const proximo = getProximoDisponivel(tipo);
+
+      gridEl.innerHTML = "";
+
+      for (let i = config.min; i <= config.max; i++) {
+        const registro = getRegistro(tipo, i);
+        const div = document.createElement("div");
+        div.className = "num";
+        div.textContent = pad(i, config.digits);
+
+        if (registro) {
+          div.classList.add("used");
+          div.onclick = () => abrirModalObservacao(tipo, i);
+
+          const temObs = registro.observacao && registro.observacao.trim();
+
+          if (temObs) {
+            div.classList.add("has-note");
+            const note = document.createElement("span");
+            note.className = "note-indicator";
+            note.textContent = "📝";
+            div.appendChild(note);
+          }
+
+          const bubble = document.createElement("div");
+          bubble.innerHTML = criarBalaoObservacao(registro, config, i);
+          div.appendChild(bubble.firstElementChild);
+
+          div.title = `Registrado em ${formatarDataBR(registro.criadoEm)}`;
+        } else if (i === proximo) {
+          div.classList.add("next");
+          div.title = "Próximo número obrigatório";
+          div.onclick = () => registrarProximoComModal();
+        } else {
+          div.title = "Número ainda indisponível. A sequência é obrigatória.";
+          div.onclick = () => {
+            setStatus(`Não é possível pular sequência. Use o número ${pad(proximo, config.digits)}.`);
+          };
+        }
+
+        gridEl.appendChild(div);
+      }
+
+      atualizarListaUsados();
+      atualizarInfo();
+    }
+
+    function atualizarListaUsados() {
+      const tipo = tipoEl.value;
+      const config = TIPOS[tipo];
+      const usados = getUsadosDoTipo(tipo);
+
+      usedTagsEl.innerHTML = "";
+
+      if (!usados.length) {
+        usedTagsEl.innerHTML = `<span class="tag">Nenhum número usado em 2026</span>`;
+        return;
+      }
+
+      usados.forEach(num => {
+        const registro = getRegistro(tipo, num);
+        const temObs = registro && registro.observacao && registro.observacao.trim();
+        const span = document.createElement("span");
+        span.className = "tag";
+        span.textContent = `${config.prefixo} ${pad(num, config.digits)} • ${formatarDataBR(registro.criadoEm)}${temObs ? " • 📝" : ""}`;
+        usedTagsEl.appendChild(span);
+      });
+    }
+
+    function marcarProximo() {
+      registrarProximoComModal();
+    }
+
+    function registrarProximoComModal() {
+      const tipo = tipoEl.value;
+      const numero = getProximoDisponivel(tipo);
+
+      if (!numero) {
+        alert("Todos os números desse documento já foram usados.");
+        return;
+      }
+
+      modalAtual = { tipo, numero, modo: "novo" };
+      abrirModalNovoNumero(tipo, numero);
+    }
+
+    function abrirModalNovoNumero(tipo, numero) {
+      const config = TIPOS[tipo];
+      modalTitulo.textContent = `Registrar ${config.prefixo} ${pad(numero, config.digits)}`;
+      modalTextoApoio.textContent = "Registre onde esse número foi utilizado. Após salvar, a observação ficará bloqueada.";
+      modalInfo.innerHTML = `
+        <b>Documento:</b> ${config.nome}<br>
+        <b>Número:</b> ${pad(numero, config.digits)}<br>
+        <b>Data do registro:</b> ${formatarDataBR(new Date().toISOString())}
+      `;
+      observacaoTexto.value = "";
+      observacaoTexto.disabled = false;
+      observacaoTexto.readOnly = false;
+      btnSalvarObservacao.style.display = "block";
+      btnSalvarObservacao.textContent = "Salvar observação";
+      modalOverlay.classList.add("show");
+      observacaoTexto.focus();
+    }
+
+    function abrirModalObservacao(tipo, numero) {
+      const config = TIPOS[tipo];
+      const registro = getRegistro(tipo, numero);
+
+      modalAtual = { tipo, numero, modo: "visualizar" };
+
+      modalTitulo.textContent = `Observação de ${config.prefixo} ${pad(numero, config.digits)}`;
+      modalTextoApoio.textContent = "Observação já salva e bloqueada para edição.";
+      modalInfo.innerHTML = `
+        <b>Documento:</b> ${config.nome}<br>
+        <b>Número:</b> ${pad(numero, config.digits)}<br>
+        <b>Data registrada:</b> ${formatarDataBR(registro.criadoEm)}
+      `;
+      observacaoTexto.value = registro.observacao || "Sem observação cadastrada.";
+      observacaoTexto.disabled = true;
+      observacaoTexto.readOnly = true;
+      btnSalvarObservacao.style.display = "none";
+      modalOverlay.classList.add("show");
+    }
+
+    function fecharModal() {
+      modalOverlay.classList.remove("show");
+    }
+
+    async function salvarObservacao() {
+      const { tipo, numero, modo } = modalAtual;
+      if (!tipo || !numero) return;
+
+      if (modo !== "novo") {
+        setStatus("Observação já bloqueada. Não é possível alterar.");
+        return;
+      }
+
+      const existente = getRegistro(tipo, numero);
+      if (existente) {
+        setStatus("Esse número já foi salvo anteriormente. A observação está bloqueada.");
+        fecharModal();
+        return;
+      }
+
+      const obs = observacaoTexto.value.trim();
+      const resultado = registrarNumero(tipo, numero, obs);
+
+      if (!resultado.ok) {
+        alert(resultado.msg);
+        return;
+      }
+
+      await salvar();
+      renderGrid();
+      fecharModal();
+      setStatus(`Número ${pad(numero, TIPOS[tipo].digits)} registrado com observação bloqueada.`);
+    }
+
+    function localizarNumero() {
+      const tipo = tipoEl.value;
+      const config = TIPOS[tipo];
+      const valor = Number(buscarNumeroEl.value);
+
+      if (!valor || valor < config.min || valor > config.max) {
+        alert(`Digite um número válido entre ${pad(config.min, config.digits)} e ${pad(config.max, config.digits)}.`);
+        return;
+      }
+
+      const botoes = [...document.querySelectorAll(".num")];
+      const alvo = botoes[valor - config.min];
+      if (alvo) {
+        alvo.scrollIntoView({ behavior: "smooth", block: "center" });
+        alvo.style.boxShadow = "0 0 0 4px rgba(245, 158, 11, 0.35)";
+        setTimeout(() => {
+          alvo.style.boxShadow = "";
+        }, 2000);
+      }
+
+      const registro = getRegistro(tipo, valor);
+      if (registro) {
+        setStatus(`Número ${pad(valor, config.digits)} registrado em ${formatarDataBR(registro.criadoEm)}${registro.observacao ? " • " + registro.observacao : ""}`);
+      } else {
+        setStatus(`Número ${pad(valor, config.digits)} ainda não foi usado.`);
+      }
+    }
+
+    async function salvar() {
+      try {
+        const resp = await fetch(URL, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Access-Key": API_KEY
+          },
+          body: JSON.stringify(db)
+        });
+
+        if (!resp.ok) throw new Error("Falha ao salvar.");
+        setStatus("Dados salvos com sucesso.");
+      } catch (e) {
+        console.error(e);
+        setStatus("Erro ao salvar no JsonBin.");
+      }
+    }
+
+    async function carregar() {
+      try {
+        const resp = await fetch(`${URL}/latest`, {
+          headers: {
+            "X-Access-Key": API_KEY
+          }
+        });
+
+        if (!resp.ok) throw new Error("Falha ao carregar.");
+        const json = await resp.json();
+        db = json.record || { ano2026: {} };
+      } catch (e) {
+        console.error(e);
+        db = { ano2026: {} };
+      }
+
+      ensureStructure();
+      renderGrid();
+      setStatus("Dados carregados.");
+    }
+
+    tipoEl.addEventListener("change", renderGrid);
+
+    modalOverlay.addEventListener("click", (e) => {
+      if (e.target === modalOverlay) {
+        fecharModal();
+      }
+    });
+
+    initSelects();
+    carregar();
+  </script>
 </body>
 </html>
