@@ -487,11 +487,20 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    const BIN_ID = "69cbc58536566621a8669c2e";
-    const API_KEY = "$2a$10$zZG0IbSsjFx8uhKbysI2MurESZSHmb/kQxS6GJqggDJDjA2FFUeTu";
-    const URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+    // =========================================================
+    // CONFIGURAÇÃO SUPABASE
+    // 1) Rode o SQL enviado junto com este arquivo no Supabase.
+    // 2) Cole abaixo a URL e a ANON KEY do seu projeto Supabase.
+    // =========================================================
+    const SUPABASE_URL = "https://nypebmbqcbrvbutamzrh.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_VXTVVV8BENUaKIMWjhrk2w_JRNQkEvg";
+    const SUPABASE_TABLE = "controle_numerico";
+    const SUPABASE_ID = "principal";
     const ADMIN_PASSWORD = "1234";
+
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const FUNCIONARIOS = {
       "2614960": "ALESSANDRO BASTOS VICENTE",
@@ -1046,6 +1055,8 @@
         return;
       }
 
+      await carregar(false);
+
       const obs = observacaoTexto.value.trim();
       const resultado = registrarNumero(tipo, numero, obs, {
         idFunc: validacao.idFunc,
@@ -1066,6 +1077,8 @@
     async function apagarRegistroAtual() {
       const { tipo, numero, modo } = modalAtual;
       if (!tipo || !numero || modo !== "visualizar") return;
+
+      await carregar(false);
 
       const config = TIPOS[tipo];
       const registro = getRegistro(tipo, numero);
@@ -1126,45 +1139,66 @@
       }
     }
 
+    function supabaseConfigurado() {
+      return SUPABASE_URL &&
+        SUPABASE_ANON_KEY &&
+        !SUPABASE_URL.includes("COLE_AQUI") &&
+        !SUPABASE_ANON_KEY.includes("COLE_AQUI");
+    }
+
     async function salvar() {
       try {
-        const resp = await fetch(URL, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Access-Key": API_KEY
-          },
-          body: JSON.stringify(db)
-        });
+        if (!supabaseConfigurado()) {
+          throw new Error("Configure SUPABASE_URL e SUPABASE_ANON_KEY no index.html.");
+        }
 
-        if (!resp.ok) throw new Error("Falha ao salvar.");
-        setStatus("Dados salvos com sucesso.");
+        ensureStructure();
+        migrarRegistrosAntigos();
+
+        const { error } = await supabaseClient
+          .from(SUPABASE_TABLE)
+          .upsert({
+            id: SUPABASE_ID,
+            dados: db,
+            updated_at: new Date().toISOString()
+          }, { onConflict: "id" });
+
+        if (error) throw error;
+        setStatus("Dados salvos com sucesso no Supabase.");
       } catch (e) {
         console.error(e);
-        setStatus("Erro ao salvar no JsonBin.");
+        setStatus("Erro ao salvar no Supabase: " + (e.message || e));
       }
     }
 
-    async function carregar() {
+    async function carregar(renderizar = true) {
       try {
-        const resp = await fetch(`${URL}/latest`, {
-          headers: {
-            "X-Access-Key": API_KEY
-          }
-        });
+        if (!supabaseConfigurado()) {
+          throw new Error("Configure SUPABASE_URL e SUPABASE_ANON_KEY no index.html.");
+        }
 
-        if (!resp.ok) throw new Error("Falha ao carregar.");
-        const json = await resp.json();
-        db = json.record || { ano2026: {} };
+        const { data, error } = await supabaseClient
+          .from(SUPABASE_TABLE)
+          .select("dados")
+          .eq("id", SUPABASE_ID)
+          .maybeSingle();
+
+        if (error) throw error;
+
+        db = data?.dados || { ano2026: {} };
       } catch (e) {
         console.error(e);
         db = { ano2026: {} };
+        setStatus("Erro ao carregar do Supabase: " + (e.message || e));
       }
 
       ensureStructure();
       migrarRegistrosAntigos();
-      renderGrid();
-      setStatus("Dados carregados.");
+
+      if (renderizar) {
+        renderGrid();
+        setStatus("Dados carregados do Supabase.");
+      }
     }
 
     tipoEl.addEventListener("change", renderGrid);
